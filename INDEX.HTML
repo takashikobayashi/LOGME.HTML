@@ -1,9 +1,11 @@
 <!DOCTYPE html> 
 <html>
  <head>
-  <title>LOG ME v0.1</title>
+  <title>LOG ME v0.2</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
 
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 
@@ -26,7 +28,7 @@ $(document).bind("mobileinit", function(){
 
   <div data-role="page" id="p01">
    <header data-role="header" data-position="fixed" data-id="header01">
-    <a href="#d03" data-icon="info" data-rel="dialog" data-transition="slideup">About</a>
+    <a href="#p04" data-icon="gear" data-direction="reverse"  >Setting</a>
     <h1>LOG ME</h1>
     <a href="#p02" data-icon="bars">List</a>
    </header><!-- /header -->
@@ -34,15 +36,15 @@ $(document).bind("mobileinit", function(){
 
 <form id="p01_frm1"><!--/form-->
 
-<div data-role="fieldcontain" id="p01_btns">
+<div data-role="fieldcontain">
 <legend class="ui-hidden-accessible" >Log Me with Title:</legend>
-<!--fieldset data-role="controlgroup" data-corners="false"-->
-<input type="button" name="p01_btn1" value="Working" id="p01_btn1" data-role="button" data-corners="false" form="p01_frm1"/>
-<input type="button" name="p01_btn2" value="Commuting" id="p01_btn2" data-role="button" data-corners="false" form="p01_frm1"/>
-<input type="button" name="p01_btn3" value="Eating" id="p01_btn3" data-role="button" data-corners="false" form="p01_frm1"/>
-<input type="button" name="p01_btn4" value="Playing" id="p01_btn4" data-role="button" data-corners="false" form="p01_frm1"/>
-<input type="button" name="p01_btn5" value="Sleeping" id="p01_btn5" data-role="button" data-corners="false" form="p01_frm1"/>
-<!--/fieldset-->
+<div id="p01_btns">
+<input type="button" name="p01_btn1" value="Working" id="p01_btn1" data-corners="false" form="p01_frm1"/>
+<input type="button" name="p01_btn2" value="Commuting" id="p01_btn2" data-corners="false" form="p01_frm1"/>
+<input type="button" name="p01_btn3" value="Eating" id="p01_btn3" data-corners="false" form="p01_frm1"/>
+<input type="button" name="p01_btn4" value="Playing" id="p01_btn4" data-corners="false" form="p01_frm1"/>
+<input type="button" name="p01_btn5" value="Sleeping" id="p01_btn5" data-corners="false" form="p01_frm1"/>
+</div> <!--end of id=p01_btns-->
 </div>
 
 <div data-role="fieldcontain">
@@ -68,12 +70,11 @@ $(document).bind("mobileinit", function(){
 
    </div><!-- /content -->
    <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
-&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a><br>hosted on Dropbox
+&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
   <div data-role="page" id="p02">
-
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p01" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
@@ -93,12 +94,11 @@ $(document).bind("mobileinit", function(){
 
    </div><!-- /content -->
    <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
-&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a><br>hosted on Dropbox
+&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
   <div data-role="page" id="p03">
-
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p02" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
@@ -140,7 +140,7 @@ $(document).bind("mobileinit", function(){
 
 <div data-role="fieldcontain">
 <label for="p03_txa1">Description:</label>
-<textarea name="p03_txa1" id="p03_txa1" form="p03_frm1"/></textarea>
+<textarea name="p03_txa1" id="p03_txa1" form="p03_frm1"></textarea>
 </div>
 
 <div id="p03_btns" data-role="fieldcontain">
@@ -151,7 +151,39 @@ $(document).bind("mobileinit", function(){
    </div><!-- /content -->   
 
    <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
-&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a><br>hosted on Dropbox
+&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
+   </footer><!-- /footer -->
+  </div><!-- /page -->
+
+  <div data-role="page" id="p04">
+   <header data-role="header" data-position="fixed" data-id="header01">
+    <a href="#d03" data-icon="info" data-rel="dialog" data-transition="slideup">About</a>
+    <h1>LOG ME</h1>
+    <a href="#p01" data-icon="arrow-r" onClick="restoreSetting()" >Cancel</a>
+   </header><!-- /header -->
+
+   <div data-role="content" id="p04_cont">
+<form id="p04_frm1"><!--/form-->
+
+<div data-role="fieldcontain">
+<label for="p04_txa1">Button Label:</label>
+<textarea name="p04_txa1" id="p04_txa1" form="p04_frm1" >Working
+Commuting
+Eating
+Playing
+Sleeping</textarea>
+</div>
+
+<div id="p04_btns" data-role="fieldcontain">
+<input type="button" name="p04_btno" value="OK" id ="p04_btno" form="p04_frm1" data-icon="check" data-theme="b" />
+<input type="button" name="p04_btnc" value="Cancel" id ="p04_btnc" form="p04_frm1" data-icon="delete" />
+</div>
+
+</form>
+
+   </div><!-- /content -->
+   <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
+&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
@@ -195,7 +227,7 @@ $(document).bind("mobileinit", function(){
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.1</h2>
+<h2 class="about">Version 0.2</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
