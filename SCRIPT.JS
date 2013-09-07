@@ -9,53 +9,78 @@ var storage = localStorage;
 
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
-var pKey = { "sign":idDef[0], "version":idDef[1] };
 
-$("#p01_btn1").click( recordClicked );
-$("#p01_btn2").click( recordClicked );
-$("#p01_btn3").click( recordClicked );
-$("#p01_btn4").click( recordClicked );
-$("#p01_btn5").click( recordClicked );
+var idKey = [ "#p04_txa1" ];
+var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
 
-$("#p02_btnc").click( clearClicked );
+function isKey( k ) {
+  var obj = JSON.parse( k );
 
-$( "#p01_frm1" ).submit( cancelSubmit );
-$( "#p02_frm1" ).submit( cancelSubmit );
-$( "#p03_frm1" ).submit( cancelSubmit );
+  return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
+}
 
-$( "#p02" ).on( "swiperight", "#p02_cont", function( e ) {
-   $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
-  } );
-$( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
-   $.mobile.changePage( "#p02", { transition: "slide" } );
-  } );
-
-/*
 $(document).one( "pageinit", function( e ){
-  showRecords();
-});
-*/
+  initApp();
 
-$( "#p02" ).on( "pagebeforeshow", function( e ){
-  showRecords();
-});
+  restoreSetting();
+  initSettingUI();
 
-/*
-$( "#d03" ).on( "pagebeforeshow", function( e ){
-  $( "#d03_mem" ).empty();
-  $( "#d03_mem" ).text( "" + "" );
-});
-*/
+  initMainUI();
+} );
+
+function initApp() {
+  $("#p01_btn1").click( recordClicked );
+  $("#p01_btn2").click( recordClicked );
+  $("#p01_btn3").click( recordClicked );
+  $("#p01_btn4").click( recordClicked );
+  $("#p01_btn5").click( recordClicked );
+
+  $("#p02_btnc").click( clearClicked );
+
+  var cancelSubmit = function( e ){
+    e.preventDefault();
+    return false;
+  }
+
+  $( "#p01_frm1" ).submit( cancelSubmit );
+  $( "#p02_frm1" ).submit( cancelSubmit );
+  $( "#p03_frm1" ).submit( cancelSubmit );
+  $( "#p04_frm1" ).submit( cancelSubmit );
+
+  $( "#p02" ).on( "swiperight", "#p02_cont", function( e ) {
+  $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
+} );
+  $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
+  $.mobile.changePage( "#p02", { transition: "slide" } );
+} );
+}
+
 
 // #p01 functions
 
-function cancelSubmit( e ){
-  e.preventDefault();
-  return false;
+function initMainUI() {
+  var titles;
+  var result = "";
+  var val = $( idKey[0] ).val();
+
+  if( val != null && val.length > 0 ) {
+    titles = toTrimedStringArray( val );
+
+    for( var i = 0; i < titles.length; i++ ) {
+      result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + titles[i] + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
+    }
+
+    $( "#p01_btns" ).empty();
+    $( "#p01_btns" ).append( result );
+    $( "#p01_btns" ).trigger( "create" );
+
+    for( var i = 0; i < titles.length; i++ ) {
+      $( "#p01_btn" + i ).click( recordClicked );
+    }
+  }
 }
 
 function recordClicked( e ) {
-
   var v = store( e.target.value );
 
 //alert(v);
@@ -70,19 +95,8 @@ function recordClicked( e ) {
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
 
-function clearClicked( e ) {
-  clearRecords();
-  showRecords();
-
-  $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
-}
-
 function addLocation( t, lat, lng ) {
-
-//alert(t);
-
   vKey.time = t;
-
   var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
 
   record = { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":lat, "lng":lng };
@@ -107,26 +121,15 @@ function store( str ) {
   return vKey.time;
 }
 
-function clearRecords() {
-  var k;
-  var i = 0;
-
-  while( storage.length > i ) {
-    k = storage.key(i);
-    if( isKey( k ) ) {
-      storage.removeItem( k );
-    }
-    else {
-      i++;
-    }
-  }
-}
-
 function notifyError( err ) {
-
 }
+
 
 // #p02 functions
+
+$( "#p02" ).on( "pagebeforeshow", function( e ){
+  showRecords();
+});
 
 function showRecords() {
   $( "#p02_record" ).empty();
@@ -138,20 +141,20 @@ function showRecords() {
 function updateList() {
   var result = "";
   var divider = "";
-  var keys = [];
+  var keys;
   var d = new Date(), k, v;
 
   if( storage.length > 0 ) {
     keys = [];
-    for( var i = 0, j = 0; i < storage.length; i++ ) {
+    for( var i = 0; i < storage.length; i++ ) {
       k = storage.key(i);
       if( isKey( k ) ) {
-        keys[j++] = JSON.parse( k ).time;
+        keys.push( JSON.parse( k ).time );
       }
     }
     keys.sort();
 
-    result += "<ul id='p02_list' data-role='listview'>";
+    result = "<ul id='p02_list' data-role='listview'>";
     divider = "";
 
     for( var i = 0; i < keys.length; i++ ){
@@ -166,7 +169,6 @@ function updateList() {
       v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
 
       result += "<li><a href='#p03' onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
-
       if( v.opt != "None" ) {
         result += " " + v.opt;
       }
@@ -182,35 +184,55 @@ function updateList() {
     }
     result += "</ul>";
   }
+
 //alert(result);
 
   return result;
 }
 
-function isKey( k ) {
-  var obj = JSON.parse( k );
+function clearClicked( e ) {
+  clearRecords();
+  showRecords();
 
-  return obj.sign == idDef[0] && obj.version == idDef[1];
+  $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
+
+function clearRecords() {
+  var k;
+  var i = 0;
+
+  while( storage.length > i ) {
+    k = storage.key(i);
+    if( isKey( k ) ) {
+      storage.removeItem( k );
+    }
+    else {
+      i++;
+    }
+  }
+}
+
 
 // #p03 functions
 
 function editRecord( t ) {
-
   vKey.time = t;
-  if( ! isKey( JSON.stringify( vKey ) ) ){
-    return;
+  if( ! isKey( JSON.stringify( vKey ) ) || storage.getItem( JSON.stringify( vKey ) ) == null ){
+    $( "#p03" ).one( "pagebeforeshow", function( e ){
+      e.preventDefault();
+      alert( "No data in storage." );
+      $.mobile.changePage( "#p02" );
+    } );
+    return false;
   }
 
   $( "#p03" ).one( "pagebeforeshow", function( e ){
-      initEditUI( t );
+    initEditUI( t );
   } );
 }
 
 function initEditUI( t ){
-
   var getRecord;
-
   var record;
   var hasPos = false;
   var lat, lng;
@@ -218,30 +240,23 @@ function initEditUI( t ){
   d.setTime( t );
 
   $( "#p03_lbl1" ).text( " [" + getDisplayFullString( d ) + "]" );
-
   $( "#p03_txt1" ).val( getISODateString( d ) );
 
   record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
 
   $( "#p03_lbl2" ).text( " [" + record.val + "]" );
-
   $( "#p03_txt2" ).val( record.val );
 
   $( "#p03_lbl3" ).text( " [" + record.opt + "]" );
-
   $( "input[name='p03_rch1'][value='" + record.opt + "']" ).prop( "checked", true );
-
   $( "input[name='p03_rch1'][value!='" + record.opt + "']" ).prop( "checked", false );
-
   $( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
 
   $( "#p03_lbl4" ).text( " [" + record.sub + "]" );
-
   $( "#p03_txt3" ).val( record.sub );
 
   $( "#p03_map1" ).empty();
   if( record.lat == undefined || record.lng == undefined ) {
-
     $( "#p03_btn1" ).button( "disable" );
   }
   else {
@@ -250,7 +265,6 @@ function initEditUI( t ){
     lng = record.lng;
 
     $( "#p03_btn1" ).button( "enable" );
-
     $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng ) );
   }
 
@@ -303,7 +317,7 @@ function initEditUI( t ){
   $( "#p03_btnd" ).unbind( "click" );
   $( "#p03_btnd" ).click( function( e ){
       initDeleteConfirmUI( t );
-    } );
+  } );
 
   getRecord = function() {
     if( hasPos ){
@@ -366,8 +380,6 @@ function initUpdateConfirmUI( t, getRecord ){
       if( $( "#p03_txa1" ).val().length > 0 ){
         addDescription( t, $( "#p03_txa1" ).val() );
       }
-
-      showRecords();
     }
 
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
@@ -390,7 +402,6 @@ function initUpdateConfirmUI( t, getRecord ){
     if( $( "#p03_txa1" ).val().length > 0 ){
       addDescription( t, $( "#p03_txa1" ).val() );
     }
-    showRecords();
 
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   } );
@@ -418,25 +429,12 @@ function initDeleteConfirmUI( t ){
   $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
 }
 
-function getGoogleMapImgTag( lat, lng ){
-  var result = "<img src=\"http://maps.googleapis.com/maps/api/staticmap?center=" + lat + "," + lng;
-
-  result += "&zoom=12&size=250x250&markers=color:blue%7Clabel:G%7C" + lat + "," + lng + "&sensor=false\" />"
-
-  return result;
-}
-
 function deleteRecord( t ) {
   vKey.time = t;
   var k = JSON.stringify( vKey );
   if( isKey( k ) ) {
     storage.removeItem( k );
-    showRecords();
   }
-}
-
-function isSameISODate( d1, d2 ){
-  return getISODateString( d1 ) == getISODateString( d2 );
 }
 
 function getDateFromUI(){
@@ -467,7 +465,74 @@ function addDescription( t, desc ){
   storage.setItem( JSON.stringify(vKey), JSON.stringify(record) );
 }
 
+
+// p04 functions
+
+function restoreSetting() {
+  sKey.id = idKey[0];
+  var val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( idKey[0] ).val( val );
+  }
+}
+
+function initSettingUI() {
+  $( "#p04_btno" ).click( function( e ){
+    initMainUI();
+    saveSetting();
+
+    $.mobile.changePage( "#p01" );
+  } );
+
+  $( "#p04_btnc" ).click( function( e ){
+    $.mobile.changePage( "#p01" );
+
+    restoreSetting();
+  } );
+}
+
+function saveSetting() {
+  sKey.id = idKey[0];
+  storage.setItem( JSON.stringify( sKey ), $( idKey[0] ).val() );
+}
+
+
+// d03 functions
+
+/*
+$( "#d03" ).on( "pagebeforeshow", function( e ){
+  $( "#d03_mem" ).empty();
+  $( "#d03_mem" ).text( "" + "" );
+});
+*/
+
+
 // utility functions
+
+function toTrimedStringArray( str ) {
+  var ret = [];
+  var prm = str.trim().split( "\n" );
+
+  for( var i = 0; i < prm.length; i++ ) {
+    if( prm[i].trim().length > 0 ) {
+      ret.push( prm[i].trim() );
+    }
+  }
+
+  return ret;
+}
+
+function getGoogleMapImgTag( lat, lng ){
+  var result = "<img src=\"http://maps.googleapis.com/maps/api/staticmap?center=" + lat + "," + lng;
+
+  result += "&zoom=12&size=250x250&markers=color:blue%7Clabel:G%7C" + lat + "," + lng + "&sensor=false\" />"
+
+  return result;
+}
+
+function isSameISODate( d1, d2 ){
+  return getISODateString( d1 ) == getISODateString( d2 );
+}
 
 function getDisplayFullString( d ) {
   return getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " " + getMilisecondString( d );

@@ -19,3 +19,6 @@ html {
 .about {
  font-family: 'Open Sans', sans-serif;
 }
+.ui-bar {
+ padding: 5px;
+}
