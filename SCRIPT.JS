@@ -48,11 +48,11 @@ function initApp() {
   $( "#p04_frm1" ).submit( cancelSubmit );
 
   $( "#p02" ).on( "swiperight", "#p02_cont", function( e ) {
-  $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
-} );
+    $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
+  } );
   $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
-  $.mobile.changePage( "#p02", { transition: "slide" } );
-} );
+    $.mobile.changePage( "#p02", { transition: "slide" } );
+  } );
 }
 
 
@@ -191,9 +191,7 @@ function updateList() {
 }
 
 function clearClicked( e ) {
-  clearRecords();
-  showRecords();
-
+  initDeleteAllConfirmUI();
   $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
 
@@ -338,6 +336,100 @@ function initEditUI( t ){
   } );
 }
 
+
+// p04 functions
+
+function restoreSetting() {
+  sKey.id = idKey[0];
+  var val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( idKey[0] ).val( val );
+  }
+}
+
+function initSettingUI() {
+  $( "#p04_btno" ).click( function( e ){
+    initMainUI();
+    saveSetting();
+
+    $.mobile.changePage( "#p01" );
+  } );
+
+  $( "#p04_btnc" ).click( function( e ){
+    $.mobile.changePage( "#p01" );
+
+    restoreSetting();
+  } );
+}
+
+function saveSetting() {
+  sKey.id = idKey[0];
+  val = $( idKey[0] ).val();
+  if( val. length > 0 ) {
+    storage.setItem( JSON.stringify( sKey ), val );
+  }
+  else {
+    storage.removeItem( JSON.stringify( sKey ) );
+  }
+}
+
+
+// d01 functions
+
+function initDeleteConfirmUI( t ){
+  var d = new Date();
+  d.setTime( t );
+
+  $( "#d01_hdr1" ).text( "Delete Record" );
+
+  $( "#d01_msg1" ).text( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" );
+
+  $( "#d01_btno" ).unbind( "click" );
+  $( "#d01_btno" ).click( function( e ){
+    deleteRecord( t );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+  } );
+
+  $( "#d01_btnc" ).unbind( "click" );
+  $( "#d01_btnc" ).click( function( e ){
+    $( "#d01" ).dialog( "close" );
+  } );
+
+  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+}
+
+function deleteRecord( t ) {
+  vKey.time = t;
+  var k = JSON.stringify( vKey );
+  if( isKey( k ) ) {
+    storage.removeItem( k );
+  }
+}
+
+function initDeleteAllConfirmUI(){
+
+  $( "#d01_hdr1" ).text( "Delete Records" );
+
+  $( "#d01_msg1" ).text( "Are you sure, you would like to delete all records ?" );
+
+  $( "#d01_btno" ).unbind( "click" );
+  $( "#d01_btno" ).click( function( e ){
+    clearRecords();
+    showRecords();
+    $( "#d01" ).dialog( "close" );
+  } );
+
+  $( "#d01_btnc" ).unbind( "click" );
+  $( "#d01_btnc" ).click( function( e ){
+    $( "#d01" ).dialog( "close" );
+  } );
+
+  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+}
+
+
+// d02 functions
+
 function initUpdateConfirmUI( t, getRecord ){
   var dd = getDateFromUI();
   var d = new Date();
@@ -409,34 +501,6 @@ function initUpdateConfirmUI( t, getRecord ){
   $.mobile.changePage( "#d02", { role: "dialog", transition: "pop" } );
 }
 
-function initDeleteConfirmUI( t ){
-  var d = new Date();
-  d.setTime( t );
-
-  $( "#d01_msg1" ).text( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" );
-
-  $( "#d01_btno" ).unbind( "click" );
-  $( "#d01_btno" ).click( function( e ){
-    deleteRecord( t );
-    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-  } );
-
-  $( "#d01_btnc" ).unbind( "click" );
-  $( "#d01_btnc" ).click( function( e ){
-    $( "#d01" ).dialog( "close" );
-  } );
-
-  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
-}
-
-function deleteRecord( t ) {
-  vKey.time = t;
-  var k = JSON.stringify( vKey );
-  if( isKey( k ) ) {
-    storage.removeItem( k );
-  }
-}
-
 function getDateFromUI(){
   var d = new Date();
   var str = $( "input[name='p03_txt1']" ).val();
@@ -463,37 +527,6 @@ function addDescription( t, desc ){
 //alert("after: "+JSON.stringify(record) );
 
   storage.setItem( JSON.stringify(vKey), JSON.stringify(record) );
-}
-
-
-// p04 functions
-
-function restoreSetting() {
-  sKey.id = idKey[0];
-  var val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( idKey[0] ).val( val );
-  }
-}
-
-function initSettingUI() {
-  $( "#p04_btno" ).click( function( e ){
-    initMainUI();
-    saveSetting();
-
-    $.mobile.changePage( "#p01" );
-  } );
-
-  $( "#p04_btnc" ).click( function( e ){
-    $.mobile.changePage( "#p01" );
-
-    restoreSetting();
-  } );
-}
-
-function saveSetting() {
-  sKey.id = idKey[0];
-  storage.setItem( JSON.stringify( sKey ), $( idKey[0] ).val() );
 }
 
 
@@ -537,7 +570,6 @@ function isSameISODate( d1, d2 ){
 function getDisplayFullString( d ) {
   return getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " " + getMilisecondString( d );
 }
-
 
 function getDisplayDateString( d ) {
   return d.getFullYear() + "/" + pad( d.getMonth()+1 ) + "/" + pad( d.getDate() );
