@@ -133,8 +133,10 @@ $(document).bind("mobileinit", function(){
 
 <div data-role="fieldcontain" id="p03_btns">
 <legend>Location:</legend>
-<input type="button" name="p03_btn0" value="New Location" id="p03_btn0" form="p03_frm1" data-icon="plus" />
-<input type="button" name="p03_btn1" value="Delete Location" id="p03_btn1" form="p01_frm1" data-icon="minus" />
+<fieldset data-role="controlgroup" data-type="horizontal">
+<input type="button" name="p03_btn0" value="New" id="p03_btn0" form="p03_frm1" data-icon="plus" />
+<input type="button" name="p03_btn1" value="Delete" id="p03_btn1" form="p01_frm1" data-icon="minus" />
+</fieldset>
 <p id="p03_map1"></p>
 </div>
 
@@ -189,7 +191,7 @@ Sleeping</textarea>
 
   <div data-role="page" id="d01">
    <header data-role="header" data-position="fixed">
-    <h2>Delete Record</h2>
+    <h2 id="d01_hdr1">Delete Record</h2>
    </header>
    <div data-role="content" id="d01_cont">
 <form id="d01_frm1"><!--/form-->
