@@ -10,7 +10,7 @@ var storage = localStorage;
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1" ];
+var idKey = [ "#p04_txa1", "p04_rch1" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
 
 function isKey( k ) {
@@ -86,10 +86,9 @@ function recordClicked( e ) {
 //alert(v);
 
   if( $( "input[name='p01_chb1']" ).is( ":checked" ) && navigator.geolocation ) {
-    navigator.geolocation.getCurrentPosition( 
-      function( pos ) {
-        addLocation( v, pos.coords.latitude, pos.coords.longitude );
-      }, notifyError );
+    navigator.geolocation.getCurrentPosition( function( pos ) {
+      addLocation( v, pos.coords.latitude, pos.coords.longitude );
+    }, notifyError );
   } // end of if
 
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
@@ -215,7 +214,7 @@ function clearRecords() {
 
 function editRecord( t ) {
   vKey.time = t;
-  if( ! isKey( JSON.stringify( vKey ) ) || storage.getItem( JSON.stringify( vKey ) ) == null ){
+  if( storage.getItem( JSON.stringify( vKey ) ) == null ){
     $( "#p03" ).one( "pagebeforeshow", function( e ){
       e.preventDefault();
       alert( "No data in storage." );
@@ -263,19 +262,18 @@ function initEditUI( t ){
     lng = record.lng;
 
     $( "#p03_btn1" ).button( "enable" );
-    $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng ) );
+    $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng, getZoomValueFromUI() ) );
   }
 
   $( "#p03_btn0" ).unbind( "click" );
   $( "#p03_btn0" ).click( function( e ) {
     if( navigator.geolocation ) {
-      navigator.geolocation.getCurrentPosition( 
-      function( pos ) {
+      navigator.geolocation.getCurrentPosition( function( pos ) {
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
 
         $( "#p03_map1" ).empty();
-        $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng ) );
+        $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng, getZoomValueFromUI() ) );
 
         $( "#p03_btn1" ).button( "enable" );
         $( "#p03_btn1" ).button( "refresh" );
@@ -345,6 +343,17 @@ function restoreSetting() {
   if( val != null ) {
     $( idKey[0] ).val( val );
   }
+
+  sKey.id = idKey[1];
+  val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( "input[name='" + idKey[1] + "'][value='" + val + "']" ).prop( "checked", true );
+    $( "input[name='" + idKey[1] + "'][value!='" + val + "']" ).prop( "checked", false );
+
+    $( "#p04" ).one( "pagebeforeshow", function( e ){
+      $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
+    } );
+  }
 }
 
 function initSettingUI() {
@@ -364,13 +373,21 @@ function initSettingUI() {
 
 function saveSetting() {
   sKey.id = idKey[0];
-  val = $( idKey[0] ).val();
+  var val = $( idKey[0] ).val();
   if( val. length > 0 ) {
     storage.setItem( JSON.stringify( sKey ), val );
   }
   else {
     storage.removeItem( JSON.stringify( sKey ) );
   }
+
+  sKey.id = idKey[1];
+  val = getZoomValueFromUI();
+  storage.setItem( JSON.stringify( sKey ), val );
+}
+
+function getZoomValueFromUI() {
+  return $( "input[name='" + idKey[1] + "']:checked" ).val();
 }
 
 
@@ -555,10 +572,10 @@ function toTrimedStringArray( str ) {
   return ret;
 }
 
-function getGoogleMapImgTag( lat, lng ){
+function getGoogleMapImgTag( lat, lng, zoom ){
   var result = "<img src=\"http://maps.googleapis.com/maps/api/staticmap?center=" + lat + "," + lng;
 
-  result += "&zoom=12&size=250x250&markers=color:blue%7Clabel:G%7C" + lat + "," + lng + "&sensor=false\" />"
+  result += "&zoom=" + zoom + "&size=250x250&markers=color:blue%7Clabel:G%7C" + lat + "," + lng + "&sensor=false\" />"
 
   return result;
 }
