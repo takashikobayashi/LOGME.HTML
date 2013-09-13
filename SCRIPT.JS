@@ -2,7 +2,6 @@
 */
 
 $.event.special.swipe.horizontalDistanceThreshold = 100;
-
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
 var storage = localStorage;
@@ -10,7 +9,7 @@ var storage = localStorage;
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1", "p04_rch1" ];
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
 
 function isKey( k ) {
@@ -90,6 +89,8 @@ function recordClicked( e ) {
       addLocation( v, pos.coords.latitude, pos.coords.longitude );
     }, notifyError );
   } // end of if
+
+  postRecord();
 
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
@@ -349,9 +350,18 @@ function restoreSetting() {
   if( val != null ) {
     $( "input[name='" + idKey[1] + "'][value='" + val + "']" ).prop( "checked", true );
     $( "input[name='" + idKey[1] + "'][value!='" + val + "']" ).prop( "checked", false );
+  }
+
+  sKey.id = idKey[2];
+  val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( "input[name='" + idKey[2] + "'][value='" + val + "']" ).prop( "checked", true );
+    $( "input[name='" + idKey[2] + "'][value!='" + val + "']" ).prop( "checked", false );
 
     $( "#p04" ).one( "pagebeforeshow", function( e ){
       $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
+
+      $( "input[name='" + idKey[2] + "']" ).checkboxradio( "refresh" );
     } );
   }
 }
@@ -384,7 +394,29 @@ function saveSetting() {
   sKey.id = idKey[1];
   val = getZoomValueFromUI();
   storage.setItem( JSON.stringify( sKey ), val );
+
+  sKey.id = idKey[2];
+  val = $( "input[name='" + idKey[2] + "']:checked" ).val();
+  storage.setItem( JSON.stringify( sKey ), val );
+
 }
+
+function postRecord() {
+  var val = $( "input[name='" + idKey[2] + "']:checked" ).val();
+//alert( val );
+  switch( val ) {
+    case "on":
+      $( "#p01_chb1" ).prop( "checked", true );
+      break;
+    case "off":
+      $( "#p01_chb1" ).prop( "checked", false );
+      break;
+    default:
+      break;
+  }
+  $( "#p01_chb1" ).checkboxradio( "refresh" );
+}
+
 
 function getZoomValueFromUI() {
   return $( "input[name='" + idKey[1] + "']:checked" ).val();
