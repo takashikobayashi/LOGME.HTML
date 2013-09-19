@@ -417,7 +417,6 @@ function postRecord() {
   $( "#p01_chb1" ).checkboxradio( "refresh" );
 }
 
-
 function getZoomValueFromUI() {
   return $( "input[name='" + idKey[1] + "']:checked" ).val();
 }
@@ -457,7 +456,7 @@ function deleteRecord( t ) {
 
 function initDeleteAllConfirmUI(){
 
-  $( "#d01_hdr1" ).text( "Delete Records" );
+  $( "#d01_hdr1" ).text( "Delete All" );
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete all records ?" );
 
@@ -503,51 +502,60 @@ function initUpdateConfirmUI( t, getRecord ){
   $( "#d02" ).one( "pagebeforeshow", function( e ){
     if( isSameISODate( d, dd ) ){
       $( "#d02_btnn" ).button( "disable" );
+      $( "#d02_btnn" ).unbind( "click" );
+
+      $( "#d02_btnu" ).unbind( "click" );
+      $( "#d02_btnu" ).click( function( e ){
+        restore( t, getRecord );
+        $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+      } );
     }
     else{
       $( "#d02_btnn" ).button( "enable" );
+      $( "#d02_btnn" ).unbind( "click" );
+      $( "#d02_btnn" ).click( function( e ){
+        if( isOverwrite( dd.getTime() ) ) {
+          restore( dd.getTime(), getRecord );
+          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+        }
+        else {
+          $( "#d02" ).dialog( "close" );
+        }
+      } );
+
+      $( "#d02_btnu" ).unbind( "click" );
+      $( "#d02_btnu" ).click( function( e ){
+        if( isOverwrite( dd.getTime() ) ) {
+          restore( dd.getTime(), getRecord );
+          deleteRecord( t );
+          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+        }
+        else {
+          $( "#d02" ).dialog( "close" );
+        }
+      } );
     }
     $( "#d02_btnn" ).button( "refresh" );
   } );
 
-  $( "#d02_btnn" ).unbind( "click" );
-  $( "#d02_btnn" ).click( function( e ){
-    var nd = getDateFromUI();
-    vKey.time = d.getTime();
-
-    if( storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( "Record on " + getDisplayFullString( nd ) + " has already existed. Over write?" ) ) ) {
-
-      storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
-      if( $( "#p03_txa1" ).val().length > 0 ){
-        addDescription( t, $( "#p03_txa1" ).val() );
-      }
-    }
-
-    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-  } );
-
-  $( "#d02_btnu" ).unbind( "click" );
-  $( "#d02_btnu" ).click( function( e ){
-    var tt = dd.getTime();
-
-    if( ! isSameISODate( d, dd ) ){
-      deleteRecord( t );
-      t = tt;
-    }
-
-//alert(JSON.stringify( getRecord() ) );
-
-    vKey.time = t;
-    storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
-
-    if( $( "#p03_txa1" ).val().length > 0 ){
-      addDescription( t, $( "#p03_txa1" ).val() );
-    }
-
-    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-  } );
-
   $.mobile.changePage( "#d02", { role: "dialog", transition: "pop" } );
+}
+
+function isOverwrite( t ) {
+  var d = new Date();
+  d.setTime( t );
+  vKey.time = t;
+
+  return storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( "Record on " + getDisplayFullString( d ) + " has already existed. Over write?" ) );
+}
+
+function restore( t, getRecord ) {
+  vKey.time = t;
+
+  storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
+  if( $( "#p03_txa1" ).val().length > 0 ){
+    addDescription( vKey.time, $( "#p03_txa1" ).val() );
+  }
 }
 
 function getDateFromUI(){
