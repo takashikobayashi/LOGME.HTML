@@ -12,13 +12,15 @@ var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
 
+var mode = 1;
+
 function isKey( k ) {
   var obj = JSON.parse( k );
 
   return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
 }
 
-$(document).one( "pageinit", function( e ){
+$(document).on( "pageinit", function( e ){
   initApp();
 
   restoreSetting();
@@ -136,6 +138,36 @@ function showRecords() {
   $( "#p02_record" ).append( updateList() );
   $( "#p02_record" ).trigger( "create" );
   $( "#p02_list" ).listview( "refresh" );
+
+  if( mode >= 2 ) {
+    $( "#p02_btnc" ).button( "disable" );
+  }
+  else {
+    $( "#p02_btnc" ).button( "enable" );
+  }
+  $( "#p02_btnc" ).button( "refresh" );
+}
+
+function toggleList() {
+  mode = ++mode % 4;
+//alert(mode);
+
+  if( ( mode + 1 ) % 4 >= 2 ) {
+    $( "#p02_lblt" ).text( "On" );
+  }
+  else {
+    $( "#p02_lblt" ).text( "Off" );
+  }
+
+  if( ( ( mode + 1 ) % 4 ) % 2 == 1 ) {
+    $( "#p02_btnt" ).buttonMarkup({ icon: "arrow-d" });
+  }
+  else {
+    $( "#p02_btnt" ).buttonMarkup({ icon: "arrow-u" });
+  }
+  $( "#p02_btnt" ).buttonMarkup( "refresh" );
+
+  showRecords();
 }
 
 function updateList() {
@@ -154,21 +186,31 @@ function updateList() {
     }
     keys.sort();
 
-    result = "<ul id='p02_list' data-role='listview'>";
+    if( mode >= 2 ) {
+      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"true\">";
+    }
+    else {
+      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"false\">";
+    }
     divider = "";
 
     for( var i = 0; i < keys.length; i++ ){
-      k = keys[keys.length-i-1];
+      if( mode % 2 == 1 ) {
+        k = keys[keys.length-i-1];
+      }
+      else {
+        k = keys[i];
+      }
       d.setTime(k);
       if( divider != getDisplayDateString( d ) ) {
         divider = getDisplayDateString( d );
-        result += "<li data-role='list-divider'>" + divider + "</li>";
+        result += "<li data-role=\"list-divider\">" + divider + "</li>";
       }
 
       vKey.time = k;
       v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
 
-      result += "<li><a href='#p03' onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
+      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + "\"><a href=\"#p03\" onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
       if( v.opt != "None" ) {
         result += " " + v.opt;
       }
@@ -463,7 +505,6 @@ function initDeleteAllConfirmUI(){
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
     clearRecords();
-    showRecords();
     $( "#d01" ).dialog( "close" );
   } );
 
