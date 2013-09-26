@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html>
  <head>
-  <title>LOG ME v0.2</title>
+  <title>LOG ME v0.3</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,7 +26,7 @@ $(document).bind("mobileinit", function(){
  </head>
  <body>
 
-  <div data-role="page" id="p01" data-title="LOG ME v0.2">
+  <div data-role="page" id="p01" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p04" data-icon="gear" data-direction="reverse"  >Setting</a>
     <h1>LOG ME</h1>
@@ -74,11 +74,11 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p02" data-title="LOG ME v0.2">
+  <div data-role="page" id="p02" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p01" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
-    <!--a href="#p02" data-icon="refresh" onClick="showRecords()">Refresh</a-->
+    <a href="#" data-icon="arrow-u" onClick="toggleList()" id="p02_btnt"><span id="p02_lblt">On</span></a>
    </header><!-- /header -->
    <div data-role="content" id="p02_cont">
 
@@ -87,7 +87,7 @@ $(document).bind("mobileinit", function(){
 <form id="p02_frm1"><!--/form-->
 
 <div id="p02_btns" data-role="fieldcontain">
-<input type="button" name="p02_btnc" value="Delete All" id ="p02_btnc" data-role="button" form="p02_frm1"/>
+<input type="button" name="p02_btnc" value="Delete All" id ="p02_btnc" form="p02_frm1"/>
 </div>
 
 </form>
@@ -98,7 +98,7 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p03" data-title="LOG ME v0.2">
+  <div data-role="page" id="p03" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p02" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
@@ -157,7 +157,7 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p04" data-title="LOG ME v0.2">
+  <div data-role="page" id="p04" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#d03" data-icon="info" data-rel="dialog" data-transition="slideup">About</a>
     <h1>LOG ME</h1>
@@ -207,7 +207,7 @@ Sleeping</textarea>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d01" data-title="LOG ME v0.2">
+  <div data-role="page" id="d01" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed">
     <h2 id="d01_hdr1">Delete Record</h2>
    </header>
@@ -222,7 +222,7 @@ Sleeping</textarea>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d02" data-title="LOG ME v0.2">
+  <div data-role="page" id="d02" data-title="LOG ME v0.3">
    <header data-role="header" data-position="fixed">
     <h2>Save Changes</h2>
    </header>
@@ -240,14 +240,14 @@ Sleeping</textarea>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" data-corners="false" id="d03" data-title="LOG ME v0.2">
+  <div data-role="page" id="d03" data-title="LOG ME v0.3" data-corners="false">
    <header data-role="header" data-position="fixed" data-theme="d" >
     <h2>About</h2>
    </header>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.23</h2>
+<h2 class="about">Version 0.3</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
