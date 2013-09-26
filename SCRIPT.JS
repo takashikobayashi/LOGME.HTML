@@ -1,4 +1,4 @@
-/* JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
+/* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
 */
 
 $.event.special.swipe.horizontalDistanceThreshold = 100;
@@ -9,10 +9,8 @@ var storage = localStorage;
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2" ];
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
-
-var mode = 1;
 
 function isKey( k ) {
   var obj = JSON.parse( k );
@@ -20,7 +18,8 @@ function isKey( k ) {
   return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
 }
 
-$(document).on( "pageinit", function( e ){
+$(document).one( "pageinit", function( e ){
+//alert("init");
   initApp();
 
   restoreSetting();
@@ -139,18 +138,22 @@ function showRecords() {
   $( "#p02_record" ).trigger( "create" );
   $( "#p02_list" ).listview( "refresh" );
 
-  if( mode >= 2 ) {
-    $( "#p02_btnc" ).button( "disable" );
-  }
-  else {
-    $( "#p02_btnc" ).button( "enable" );
-  }
-  $( "#p02_btnc" ).button( "refresh" );
+  updateButtons();
 }
 
 function toggleList() {
+  var mode = getModeValueFromUI();
+//alert("cur mode: "+mode);
+
   mode = ++mode % 4;
-//alert(mode);
+  setModeValueToUI( mode );
+//alert("new mode: "+mode);
+
+  showRecords();
+}
+
+function updateButtons() {
+  var mode = getModeValueFromUI();
 
   if( ( mode + 1 ) % 4 >= 2 ) {
     $( "#p02_lblt" ).text( "On" );
@@ -167,7 +170,13 @@ function toggleList() {
   }
   $( "#p02_btnt" ).buttonMarkup( "refresh" );
 
-  showRecords();
+  if( mode >= 2 ) {
+    $( "#p02_btnc" ).button( "disable" );
+  }
+  else {
+    $( "#p02_btnc" ).button( "enable" );
+  }
+  $( "#p02_btnc" ).button( "refresh" );
 }
 
 function updateList() {
@@ -175,6 +184,7 @@ function updateList() {
   var divider = "";
   var keys;
   var d = new Date(), k, v;
+  var mode = getModeValueFromUI();
 
   if( storage.length > 0 ) {
     keys = [];
@@ -380,6 +390,21 @@ function initEditUI( t ){
 
 // p04 functions
 
+function initSettingUI() {
+  $( "#p04_btno" ).click( function( e ){
+    initMainUI();
+    saveSetting();
+
+    $.mobile.changePage( "#p01" );
+  } );
+
+  $( "#p04_btnc" ).click( function( e ){
+    $.mobile.changePage( "#p01" );
+
+    restoreSetting();
+  } );
+}
+
 function restoreSetting() {
   sKey.id = idKey[0];
   var val = storage.getItem( JSON.stringify( sKey ) );
@@ -399,27 +424,30 @@ function restoreSetting() {
   if( val != null ) {
     $( "input[name='" + idKey[2] + "'][value='" + val + "']" ).prop( "checked", true );
     $( "input[name='" + idKey[2] + "'][value!='" + val + "']" ).prop( "checked", false );
-
-    $( "#p04" ).one( "pagebeforeshow", function( e ){
-      $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
-
-      $( "input[name='" + idKey[2] + "']" ).checkboxradio( "refresh" );
-    } );
   }
-}
 
-function initSettingUI() {
-  $( "#p04_btno" ).click( function( e ){
-    initMainUI();
-    saveSetting();
+  sKey.id = idKey[3];
+  val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( "input[name='" + idKey[3] + "'][value='" + val + "']" ).prop( "checked", true );
+    $( "input[name='" + idKey[3] + "'][value!='" + val + "']" ).prop( "checked", false );
+  }
 
-    $.mobile.changePage( "#p01" );
-  } );
+  sKey.id = idKey[4];
+  val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( "select[name='" + idKey[4] + "'] option[value='" + val + "']" ).prop( "selected", true );
+    $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
+  }
 
-  $( "#p04_btnc" ).click( function( e ){
-    $.mobile.changePage( "#p01" );
+  $( "#p04" ).one( "pagebeforeshow", function( e ){
+    $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
 
-    restoreSetting();
+    $( "input[name='" + idKey[2] + "']" ).checkboxradio( "refresh" );
+
+    $( "input[name='" + idKey[3] + "']" ).checkboxradio( "refresh" );
+
+    $( "select[name='" + idKey[4] + "']" ).slider( "refresh" );
   } );
 }
 
@@ -441,6 +469,13 @@ function saveSetting() {
   val = $( "input[name='" + idKey[2] + "']:checked" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
 
+  sKey.id = idKey[3];
+  val = $( "input[name='" + idKey[3] + "']:checked" ).val();
+  storage.setItem( JSON.stringify( sKey ), val );
+
+  sKey.id = idKey[4];
+  val = $( "select[name='" + idKey[4] + "'] option:selected" ).val();
+  storage.setItem( JSON.stringify( sKey ), val );
 }
 
 function postRecord() {
@@ -461,6 +496,32 @@ function postRecord() {
 
 function getZoomValueFromUI() {
   return $( "input[name='" + idKey[1] + "']:checked" ).val();
+}
+
+function getModeValueFromUI() {
+//alert("getModeValueFromUI");
+//alert("radio: "+$( "input[name='" + idKey[3] + "']:checked" ).val());
+//alert("flip: "+$( "select[name='" + idKey[4] + "'] option:selected" ).val());
+
+  return Number( $( "input[name='" + idKey[3] + "']:checked" ).val() ) + Number( $( "select[name='" + idKey[4] + "'] option:selected" ).val() );
+}
+
+function setModeValueToUI( mode ) {
+  var val = mode % 2;
+//alert("radio: "+val);
+  $( "input[name='" + idKey[3] + "'][value='" + val + "']" ).prop( "checked", true );
+  $( "input[name='" + idKey[3] + "'][value!='" + val + "']" ).prop( "checked", false );
+
+  val = mode - ( mode % 2 );
+//alert("flip: "+val);
+  $( "select[name='" + idKey[4] + "'] option[value='" + val + "']" ).prop( "selected", true );
+  $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
+
+  $( "#p04" ).one( "pagebeforeshow", function( e ){
+    $( "input[name='" + idKey[3] + "']" ).checkboxradio( "refresh" );
+
+    $( "select[name='" + idKey[4] + "']" ).slider( "refresh" );
+  } );
 }
 
 
