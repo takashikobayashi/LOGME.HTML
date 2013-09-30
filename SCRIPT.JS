@@ -9,7 +9,7 @@ var storage = localStorage;
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1" ];
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
 
 function isKey( k ) {
@@ -17,6 +17,15 @@ function isKey( k ) {
 
   return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
 }
+
+function store( t, getRecord ) {
+  vKey.time = t;
+
+  storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
+//alert(JSON.stringify(vKey));
+//alert(JSON.stringify(getRecord()));
+}
+
 
 $(document).one( "pageinit", function( e ){
 //alert("init");
@@ -81,13 +90,16 @@ function initMainUI() {
 }
 
 function recordClicked( e ) {
-  var v = store( e.target.value );
+  var d = new Date();
+  var getRecord = function() {
+    return { "val":e.target.value, "opt":$( "input[name='p01_opt']:checked" ).val(), "sub":$( "input[name='p01_txt1']" ).val() };
+  }
 
-//alert(v);
+  store( d.getTime(), getRecord );
 
   if( $( "input[name='p01_chb1']" ).is( ":checked" ) && navigator.geolocation ) {
     navigator.geolocation.getCurrentPosition( function( pos ) {
-      addLocation( v, pos.coords.latitude, pos.coords.longitude );
+      addLocation( d.getTime(), pos.coords.latitude, pos.coords.longitude );
     }, notifyError );
   } // end of if
 
@@ -100,29 +112,25 @@ function addLocation( t, lat, lng ) {
   vKey.time = t;
   var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
 
-  record = { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":lat, "lng":lng };
+  var getRecord = function() {
+    return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":lat, "lng":lng };
+  }
 
-//alert( "time : " + t + "\nval : " + record.val + "\nopt : " + record.opt + "\nsub : " + record.sub + "\nlat : " + record.lat + "\nlng : " + record.lng );
-
-  storage.setItem( JSON.stringify(vKey), JSON.stringify(record) );
-}
-
-function store( str ) {
-  var d = new Date();
-  var obj = { "val":str, "opt":$( "input[name='p01_opt']:checked" ).val(), "sub":$( "input[name='p01_txt1']" ).val() };
-
-//alert(JSON.stringify(obj));
-
-  vKey.time = d.getTime();
-
-//alert(JSON.stringify(vKey));
-
-  storage.setItem( JSON.stringify(vKey), JSON.stringify(obj) );
-
-  return vKey.time;
+  store( t, getRecord );
 }
 
 function notifyError( err ) {
+}
+
+function addToSubtitle( str ) {
+//alert(str);
+  var sub = $( "#p01_txt1" ).val();
+  if( sub != null && sub.length > 0 ) {
+    str = " " + str;
+  }
+
+  $( "#p01_txt1" ).val( sub + str );
+  $( "#p01_pup1" ).popup( "close" );
 }
 
 
@@ -220,7 +228,7 @@ function updateList() {
       vKey.time = k;
       v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
 
-      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + "\"><a href=\"#p03\" onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
+      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + " " + v.sub + "\"><a href=\"#p03\" onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
       if( v.opt != "None" ) {
         result += " " + v.opt;
       }
@@ -652,11 +660,10 @@ function isOverwrite( t ) {
 }
 
 function restore( t, getRecord ) {
-  vKey.time = t;
+  store( t, getRecord );
 
-  storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
   if( $( "#p03_txa1" ).val().length > 0 ){
-    addDescription( vKey.time, $( "#p03_txa1" ).val() );
+    addDescription( t, $( "#p03_txa1" ).val() );
   }
 }
 
@@ -676,16 +683,16 @@ function addDescription( t, desc ){
 
 //alert("before: "+JSON.stringify(record));
 
-  if( record.lat == undefined || record.lng == undefined ) {
-    record = { "val":record.val, "opt":record.opt, "sub":record.sub, "dsc":desc };
-  }
-  else {
-    record = { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":record.lat, "lng":record.lng, "dsc":desc };
+  var getRecord = function() {
+    if( record.lat == undefined || record.lng == undefined ) {
+      return { "val":record.val, "opt":record.opt, "sub":record.sub, "dsc":desc };
+    }
+    else {
+      return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":record.lat, "lng":record.lng, "dsc":desc };
+    }
   }
 
-//alert("after: "+JSON.stringify(record) );
-
-  storage.setItem( JSON.stringify(vKey), JSON.stringify(record) );
+  store( t, getRecord );
 }
 
 
