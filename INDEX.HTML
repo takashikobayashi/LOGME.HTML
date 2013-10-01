@@ -63,23 +63,14 @@ $(document).bind("mobileinit", function(){
 <input type="text" placeholder="Subtitle" name="p01_txt1" id="p01_txt1" value="" form="p01_frm1"/>
   </div>
   <div class="ui-block-1">
-<a href="#p01_pup1" data-rel="popup" data-role="button" data-icon="arrow-d" data-inline="true" data-iconpos="notext" >select</a>
+<label for="p01_sel1" class="ui-hidden-accessible">Add to Subtitle</label>
+<select name="p01_sel1" id="p01_sel1" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Meeting">Meeting</option>
+<option value="Lunch">Lunch</option>
+</select>
   </div>
 </div>
-</div>
-
-<div id="p01_pup1" data-role="popup">
-<ul data-role="listview">
-<li data-role="list-divider">Add to Subtitle</li>
-<li><a href="#" onClick="addToSubtitle('Meeting')" >Meeting</a></li>
-<li><a href="#" onClick="addToSubtitle('Writing reports')" >Writing reports</a></li>
-<li><a href="#" onClick="addToSubtitle('Train')" >Train</a></li>
-<li><a href="#" onClick="addToSubtitle('Bus')" >Bus</a></li>
-<li><a href="#" onClick="addToSubtitle('Lunch')" >Lunch</a></li>
-<li><a href="#" onClick="addToSubtitle('Dinner')" >Dinner</a></li>
-<li><a href="#" onClick="addToSubtitle('Football')" >Football</a></li>
-<li><a href="#" onClick="addToSubtitle('Billiards')" >Billiards</a></li>
-</ul>
 </div>
 
 <div data-role="fieldcontain">
@@ -195,10 +186,11 @@ Commuting
 Eating
 Playing
 Sleeping</textarea>
+<p>Clearing the text becomes default values after reloading the app.</p>
 </div>
 
 <div data-role="fieldcontain">
-<label for="p04_txa2">Subtitle Shortcuts: [Not work now]</label>
+<label for="p04_txa2">Subtitle Shortcuts:</label>
 <textarea name="p04_txa2" id="p04_txa2" form="p04_frm1" >Meeting
 Writing reports
 Train
@@ -207,6 +199,7 @@ Lunch
 Dinner
 Football
 Billiards</textarea>
+<p>Clearing the text becomes default values after reloading the app.</p>
 </div>
 
 <div data-role="fieldcontain">
@@ -296,7 +289,7 @@ Billiards</textarea>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.4</h2>
+<h2 class="about">Version 0.41</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
