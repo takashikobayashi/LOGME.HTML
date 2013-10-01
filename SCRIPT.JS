@@ -38,11 +38,10 @@ $(document).one( "pageinit", function( e ){
 } );
 
 function initApp() {
-  $("#p01_btn1").click( recordClicked );
-  $("#p01_btn2").click( recordClicked );
-  $("#p01_btn3").click( recordClicked );
-  $("#p01_btn4").click( recordClicked );
-  $("#p01_btn5").click( recordClicked );
+  $( "#p01_sel1" ).change( function( e ) {
+//alert(e.target.value);
+    addToSubtitle( e.target.value );
+  } );
 
   $("#p02_btnc").click( clearClicked );
 
@@ -68,24 +67,40 @@ function initApp() {
 // #p01 functions
 
 function initMainUI() {
-  var titles;
+  var i;
   var result = "";
+  var elms;
   var val = $( idKey[0] ).val();
 
   if( val != null && val.length > 0 ) {
-    titles = toTrimedStringArray( val );
+    elms = toTrimedStringArray( val );
 
-    for( var i = 0; i < titles.length; i++ ) {
-      result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + titles[i] + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
+    for( i = 0; i < elms.length; i++ ) {
+      result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + removeTag( elms[i] ) + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
     }
 
     $( "#p01_btns" ).empty();
     $( "#p01_btns" ).append( result );
     $( "#p01_btns" ).trigger( "create" );
 
-    for( var i = 0; i < titles.length; i++ ) {
+    for( i = 0; i < elms.length; i++ ) {
       $( "#p01_btn" + i ).click( recordClicked );
     }
+  }
+
+  result = "<option value=\"\" selected=\"selected\"></option>";
+  val = $( idKey[5] ).val();
+
+  if( val != null && val.length > 0 ) {
+    elms = toTrimedStringArray( val );
+
+    for( i = 0; i < elms.length; i++ ) {
+      result += "<option value=\"" + elms[i] + "\">" + removeTag( elms[i] ) + "</option>";
+    }
+
+    $( "#p01_sel1" ).empty();
+    $( "#p01_sel1" ).append( result );
+    $( "#p01_sel1" ).trigger( "create" );
   }
 }
 
@@ -130,7 +145,7 @@ function addToSubtitle( str ) {
   }
 
   $( "#p01_txt1" ).val( sub + str );
-  $( "#p01_pup1" ).popup( "close" );
+//  $( "#p01_pup1" ).popup( "close" );
 }
 
 
@@ -188,6 +203,7 @@ function updateButtons() {
 }
 
 function updateList() {
+  var i;
   var result = "";
   var divider = "";
   var keys;
@@ -212,7 +228,7 @@ function updateList() {
     }
     divider = "";
 
-    for( var i = 0; i < keys.length; i++ ){
+    for( i = 0; i < keys.length; i++ ){
       if( mode % 2 == 1 ) {
         k = keys[keys.length-i-1];
       }
@@ -300,6 +316,7 @@ function initEditUI( t ){
   $( "#p03_lbl1" ).text( " [" + getDisplayFullString( d ) + "]" );
   $( "#p03_txt1" ).val( getISODateString( d ) );
 
+  vKey.time = t;
   record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
 
   $( "#p03_lbl2" ).text( " [" + record.val + "]" );
@@ -448,6 +465,12 @@ function restoreSetting() {
     $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
   }
 
+  sKey.id = idKey[5];
+  var val = storage.getItem( JSON.stringify( sKey ) );
+  if( val != null ) {
+    $( idKey[5] ).val( val );
+  }
+
   $( "#p04" ).one( "pagebeforeshow", function( e ){
     $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
 
@@ -462,7 +485,7 @@ function restoreSetting() {
 function saveSetting() {
   sKey.id = idKey[0];
   var val = $( idKey[0] ).val();
-  if( val. length > 0 ) {
+  if( val.length > 0 ) {
     storage.setItem( JSON.stringify( sKey ), val );
   }
   else {
@@ -484,6 +507,15 @@ function saveSetting() {
   sKey.id = idKey[4];
   val = $( "select[name='" + idKey[4] + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
+
+  sKey.id = idKey[5];
+  val = $( idKey[5] ).val();
+  if( val.length > 0 ) {
+    storage.setItem( JSON.stringify( sKey ), val );
+  }
+  else {
+    storage.removeItem( JSON.stringify( sKey ) );
+  }
 }
 
 function postRecord() {
@@ -707,6 +739,10 @@ $( "#d03" ).on( "pagebeforeshow", function( e ){
 
 
 // utility functions
+
+function removeTag( str ) {
+  return str.replace( /</g, "&lt" ).replace( />/g, "&gt" );
+}
 
 function toTrimedStringArray( str ) {
   var ret = [];
