@@ -60,10 +60,11 @@ $(document).bind("mobileinit", function(){
 <label for="p01_txt1" class="ui-hidden-accessible" >Subtitle:</label>
 <div class="ui-grid-d">
   <div class="ui-block-4">
-<input type="text" placeholder="Subtitle" name="p01_txt1" id="p01_txt1" value="" form="p01_frm1"/>
+<label for="p01_txt1" class="ui-hidden-accessible" >Subtitle Text:</label>
+<input type="text" placeholder="Subtitle" name="p01_txt1" id="p01_txt1" value="" form="p01_frm1" data-clear-btn="false" />
   </div>
   <div class="ui-block-1">
-<label for="p01_sel1" class="ui-hidden-accessible">Add to Subtitle</label>
+<label for="p01_sel1" class="ui-hidden-accessible">Add to Subtitle:</label>
 <select name="p01_sel1" id="p01_sel1" data-iconpos="notext">
 <option value="" selected="selected"></option>
 <option value="Meeting">Meeting</option>
@@ -121,12 +122,29 @@ $(document).bind("mobileinit", function(){
 <div data-role="fieldcontain">
 <label for="p03_txt1">Date Time:<span id="p03_lbl1"></span></label>
 <input type="datetime-local" placeholder="" name="p03_txt1" id="p03_txt1" value="" form="p03_frm1"/>
-<p>Note: Second & Mili sec become 00 000, if you set another Date Time.</p>
+<p>Second & Mili sec become 00 000, if you set another Date Time.</p>
 </div>
 
 <div data-role="fieldcontain">
 <label for="p03_txt2">Title:<span id="p03_lbl2"></span></label>
-<input type="text" name="p03_txt2" id="p03_txt2" form="p03_frm1"/>
+<div class="ui-grid-d">
+  <div class="ui-block-4">
+<label for="p03_txt2" class="ui-hidden-accessible">Title Text</label>
+<input type="text" name="p03_txt2" id="p03_txt2" form="p03_frm1" data-clear-btn="false" />
+  </div>
+  <div class="ui-block-1">
+<label for="p03_sel1" class="ui-hidden-accessible">Add to Title</label>
+<select name="p03_sel1" id="p03_sel1" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Working">Working</option>
+<option value="Commuting">Commuting</option>
+<option value="Eating">Eating</option>
+<option value="Playing">Playing</option>
+<option value="Sleeping">Sleeping</option>
+</select>
+  </div>
+</div>
+<p>Selected string REPLACES the Title.</p>
 </div>
 
 <div data-role="fieldcontain">
@@ -140,7 +158,21 @@ $(document).bind("mobileinit", function(){
 
 <div data-role="fieldcontain">
 <label for="p03_txt3">Subtitle:<span id="p03_lbl4"></span></label>
-<input type="text" placeholder="Subtitle" name="p03_txt3" id="p03_txt3" value="" form="p03_frm1"/>
+<div class="ui-grid-d">
+  <div class="ui-block-4">
+<label for="p03_txt3" class="ui-hidden-accessible">Subtitle Text:</label>
+<input type="text" placeholder="Subtitle" name="p03_txt3" id="p03_txt3" value="" form="p03_frm1" data-clear-btn="false" />
+  </div>
+  <div class="ui-block-1">
+<label for="p03_sel2" class="ui-hidden-accessible">Add to Subtitle:</label>
+<select name="p03_sel2" id="p03_sel2" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Meeting">Meeting</option>
+<option value="Lunch">Lunch</option>
+</select>
+  </div>
+</div>
+<p>Selected string is ADDED to the end of the Subtitle.</p>
 </div>
 
 <div data-role="fieldcontain" id="p03_btns">
@@ -180,7 +212,7 @@ $(document).bind("mobileinit", function(){
 <form id="p04_frm1"><!--/form-->
 
 <div data-role="fieldcontain">
-<label for="p04_txa1">Button Label:</label>
+<label for="p04_txa1">Title Buttons and Shortcuts:</label>
 <textarea name="p04_txa1" id="p04_txa1" form="p04_frm1" >Working
 Commuting
 Eating
@@ -216,7 +248,7 @@ Billiards</textarea>
 <legend>Recording Location:</legend>
 <input type="radio" value="off" id="p04_rch21" name="p04_rch2" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch21">Auto off</label>
 <input type="radio" value="on" id="p04_rch22" name="p04_rch2" form="p04_frm1" data-mini="true"/><label for="p04_rch22">Auto on</label>
-<input type="radio" value="stay" id="p04_rch23" name="p04_rch2" form="p04_frm1" data-mini="true"/><label for="p04_rch23">Stay</label>
+<input type="radio" value="stay" id="p04_rch23" name="p04_rch2" form="p04_frm1" data-mini="true"/><label for="p04_rch23">Stay tuned</label>
 </fieldset>
 </div>
 
@@ -289,7 +321,7 @@ Billiards</textarea>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.41</h2>
+<h2 class="about">Version 0.42</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
