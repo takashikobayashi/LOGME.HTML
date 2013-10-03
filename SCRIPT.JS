@@ -1,3 +1,4 @@
+
 /* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
 */
 
@@ -35,12 +36,25 @@ $(document).one( "pageinit", function( e ){
   initSettingUI();
 
   initMainUI();
+  initEditUI();
 } );
 
 function initApp() {
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
-    addToSubtitle( e.target.value );
+    addToSubtitle( e.target.value, "#p01_txt1" );
+  } );
+
+  $( "#p03_sel1" ).change( function( e ) {
+//alert(e.target.value);
+    if( e.target.value.length > 0 ) {
+      $( "#p03_txt2" ).val( e.target.value );
+    }
+  } );
+
+  $( "#p03_sel2" ).change( function( e ) {
+//alert(e.target.value);
+    addToSubtitle( e.target.value, "#p03_txt3" );
   } );
 
   $("#p02_btnc").click( clearClicked );
@@ -88,20 +102,7 @@ function initMainUI() {
     }
   }
 
-  result = "<option value=\"\" selected=\"selected\"></option>";
-  val = $( idKey[5] ).val();
-
-  if( val != null && val.length > 0 ) {
-    elms = toTrimedStringArray( val );
-
-    for( i = 0; i < elms.length; i++ ) {
-      result += "<option value=\"" + elms[i] + "\">" + removeTag( elms[i] ) + "</option>";
-    }
-
-    $( "#p01_sel1" ).empty();
-    $( "#p01_sel1" ).append( result );
-    $( "#p01_sel1" ).trigger( "create" );
-  }
+  initSelectUI( idKey[5], "#p01_sel1" );
 }
 
 function recordClicked( e ) {
@@ -137,15 +138,16 @@ function addLocation( t, lat, lng ) {
 function notifyError( err ) {
 }
 
-function addToSubtitle( str ) {
+function addToSubtitle( str, target ) {
 //alert(str);
-  var sub = $( "#p01_txt1" ).val();
-  if( sub != null && sub.length > 0 ) {
-    str = " " + str;
-  }
+  var sub = $( target ).val();
+  if( str.length > 0 ) {
+    if( sub != null && sub.length > 0 ) {
+      str = " " + str;
+    }
 
-  $( "#p01_txt1" ).val( sub + str );
-//  $( "#p01_pup1" ).popup( "close" );
+    $( target ).val( sub + str );
+  }
 }
 
 
@@ -301,11 +303,11 @@ function editRecord( t ) {
   }
 
   $( "#p03" ).one( "pagebeforeshow", function( e ){
-    initEditUI( t );
+    readyForEdit( t );
   } );
 }
 
-function initEditUI( t ){
+function readyForEdit( t ){
   var getRecord;
   var record;
   var hasPos = false;
@@ -412,12 +414,36 @@ function initEditUI( t ){
   } );
 }
 
+function initEditUI() {
+  initSelectUI( idKey[0], "#p03_sel1" );
+  initSelectUI( idKey[5], "#p03_sel2" );
+}
+
+function initSelectUI( source, target ) {
+  var elms, i;
+  var result = "<option value=\"\" selected=\"selected\"></option>";
+  var val = $( source ).val();
+
+  if( val != null && val.length > 0 ) {
+    elms = toTrimedStringArray( val );
+
+    for( i = 0; i < elms.length; i++ ) {
+      result += "<option value=\"" + elms[i] + "\">" + removeTag( elms[i] ) + "</option>";
+    }
+
+    $( target ).empty();
+    $( target ).append( result );
+    $( target ).trigger( "create" );
+  }
+}
+
 
 // p04 functions
 
 function initSettingUI() {
   $( "#p04_btno" ).click( function( e ){
     initMainUI();
+    initEditUI();
     saveSetting();
 
     $.mobile.changePage( "#p01" );
