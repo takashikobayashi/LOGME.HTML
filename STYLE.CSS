@@ -1,4 +1,4 @@
-/* JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
+/* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
 */
 @charset "UTF-8";
 
@@ -20,5 +20,25 @@ html {
  font-family: 'Open Sans', sans-serif;
 }
 .ui-bar {
+ padding: 5px;
+}
+
+/* based on jQuery-mobile grid */
+.ui-block-4,
+.ui-block-1 {
+ margin: 0;
+ padding: 0;
+ border: 0;
+ float: left;
+ min-height: 1px;
+ -webkit-box-sizing: border-box;
+ -moz-box-sizing: border-box;
+ box-sizing: border-box;
+}
+.ui-grid-d > .ui-block-4 {
+ width: 80%;
+}
+.ui-grid-d > .ui-block-1 {
+ width: 20%;
  padding: 5px;
 }
