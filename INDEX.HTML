@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html>
  <head>
-  <title>LOG ME v0.3</title>
+  <title>LOG ME v0.4</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,7 +26,7 @@ $(document).bind("mobileinit", function(){
  </head>
  <body>
 
-  <div data-role="page" id="p01" data-title="LOG ME v0.3">
+  <div data-role="page" id="p01" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p04" data-icon="gear" data-direction="reverse"  >Setting</a>
     <h1>LOG ME</h1>
@@ -58,7 +58,20 @@ $(document).bind("mobileinit", function(){
 
 <div data-role="fieldcontain">
 <label for="p01_txt1" class="ui-hidden-accessible" >Subtitle:</label>
-<input type="text" placeholder="Subtitle" name="p01_txt1" id="p01_txt1" value="" form="p01_frm1"/>
+<div class="ui-grid-d">
+  <div class="ui-block-4">
+<label for="p01_txt1" class="ui-hidden-accessible" >Subtitle Text:</label>
+<input type="text" placeholder="Subtitle" name="p01_txt1" id="p01_txt1" value="" form="p01_frm1" data-clear-btn="false" />
+  </div>
+  <div class="ui-block-1">
+<label for="p01_sel1" class="ui-hidden-accessible">Add to Subtitle:</label>
+<select name="p01_sel1" id="p01_sel1" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Meeting">Meeting</option>
+<option value="Lunch">Lunch</option>
+</select>
+  </div>
+</div>
 </div>
 
 <div data-role="fieldcontain">
@@ -74,7 +87,7 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p02" data-title="LOG ME v0.3">
+  <div data-role="page" id="p02" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p01" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
@@ -98,7 +111,7 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p03" data-title="LOG ME v0.3">
+  <div data-role="page" id="p03" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p02" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
@@ -109,12 +122,29 @@ $(document).bind("mobileinit", function(){
 <div data-role="fieldcontain">
 <label for="p03_txt1">Date Time:<span id="p03_lbl1"></span></label>
 <input type="datetime-local" placeholder="" name="p03_txt1" id="p03_txt1" value="" form="p03_frm1"/>
-<p>Note: Second & Mili sec become 00 000, if you set another Date Time.</p>
+<p>Second & Mili sec become 00 000, if you set another Date Time.</p>
 </div>
 
 <div data-role="fieldcontain">
 <label for="p03_txt2">Title:<span id="p03_lbl2"></span></label>
-<input type="text" name="p03_txt2" id="p03_txt2" form="p03_frm1"/>
+<div class="ui-grid-d">
+  <div class="ui-block-4">
+<label for="p03_txt2" class="ui-hidden-accessible">Title Text</label>
+<input type="text" name="p03_txt2" id="p03_txt2" form="p03_frm1" data-clear-btn="false" />
+  </div>
+  <div class="ui-block-1">
+<label for="p03_sel1" class="ui-hidden-accessible">Add to Title</label>
+<select name="p03_sel1" id="p03_sel1" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Working">Working</option>
+<option value="Commuting">Commuting</option>
+<option value="Eating">Eating</option>
+<option value="Playing">Playing</option>
+<option value="Sleeping">Sleeping</option>
+</select>
+  </div>
+</div>
+<p>Selected string REPLACES the Title.</p>
 </div>
 
 <div data-role="fieldcontain">
@@ -128,7 +158,21 @@ $(document).bind("mobileinit", function(){
 
 <div data-role="fieldcontain">
 <label for="p03_txt3">Subtitle:<span id="p03_lbl4"></span></label>
-<input type="text" placeholder="Subtitle" name="p03_txt3" id="p03_txt3" value="" form="p03_frm1"/>
+<div class="ui-grid-d">
+  <div class="ui-block-4">
+<label for="p03_txt3" class="ui-hidden-accessible">Subtitle Text:</label>
+<input type="text" placeholder="Subtitle" name="p03_txt3" id="p03_txt3" value="" form="p03_frm1" data-clear-btn="false" />
+  </div>
+  <div class="ui-block-1">
+<label for="p03_sel2" class="ui-hidden-accessible">Add to Subtitle:</label>
+<select name="p03_sel2" id="p03_sel2" data-iconpos="notext">
+<option value="" selected="selected"></option>
+<option value="Meeting">Meeting</option>
+<option value="Lunch">Lunch</option>
+</select>
+  </div>
+</div>
+<p>Selected string is ADDED to the end of the Subtitle.</p>
 </div>
 
 <div data-role="fieldcontain" id="p03_btns">
@@ -157,7 +201,7 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p04" data-title="LOG ME v0.3">
+  <div data-role="page" id="p04" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#d03" data-icon="info" data-rel="dialog" data-transition="slideup">About</a>
     <h1>LOG ME</h1>
@@ -168,43 +212,57 @@ $(document).bind("mobileinit", function(){
 <form id="p04_frm1"><!--/form-->
 
 <div data-role="fieldcontain">
-<label for="p04_txa1">Button Label:</label>
+<label for="p04_txa1">Title Buttons and Shortcuts:</label>
 <textarea name="p04_txa1" id="p04_txa1" form="p04_frm1" >Working
 Commuting
 Eating
 Playing
 Sleeping</textarea>
+<p>Clearing the text becomes default values after reloading the app.</p>
+</div>
+
+<div data-role="fieldcontain">
+<label for="p04_txa2">Subtitle Shortcuts:</label>
+<textarea name="p04_txa2" id="p04_txa2" form="p04_frm1" >Meeting
+Writing reports
+Train
+Bus
+Lunch
+Dinner
+Football
+Billiards</textarea>
+<p>Clearing the text becomes default values after reloading the app.</p>
 </div>
 
 <div data-role="fieldcontain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Location Zoom:</legend>
-<input type="radio" value="12" id="p04_rch11" name="p04_rch1" form="p04_frm1" /><label for="p04_rch11">City</label>
-<input type="radio" value="16" id="p04_rch12" name="p04_rch1" form="p04_frm1" checked="checked"/><label for="p04_rch12">Town</label>
-<input type="radio" value="19" id="p04_rch13" name="p04_rch1" form="p04_frm1"/><label for="p04_rch13">Block</label>
+<input type="radio" value="12" id="p04_rch11" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch11">City</label>
+<input type="radio" value="16" id="p04_rch12" name="p04_rch1" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch12">Town</label>
+<input type="radio" value="19" id="p04_rch13" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch13">Block</label>
 </fieldset>
 </div>
 
 <div data-role="fieldcontain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Recording Location:</legend>
-<input type="radio" value="off" id="p04_rch21" name="p04_rch2" form="p04_frm1" checked="checked"/><label for="p04_rch21">Auto off</label>
-<input type="radio" value="on" id="p04_rch22" name="p04_rch2" form="p04_frm1"/><label for="p04_rch22">Auto on</label>
-<input type="radio" value="stay" id="p04_rch23" name="p04_rch2" form="p04_frm1"/><label for="p04_rch23">Stay</label>
+<input type="radio" value="off" id="p04_rch21" name="p04_rch2" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch21">Auto off</label>
+<input type="radio" value="on" id="p04_rch22" name="p04_rch2" form="p04_frm1" data-mini="true"/><label for="p04_rch22">Auto on</label>
+<input type="radio" value="stay" id="p04_rch23" name="p04_rch2" form="p04_frm1" data-mini="true"/><label for="p04_rch23">Stay tuned</label>
 </fieldset>
 </div>
 
 <div data-role="fieldcontain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>List Order:</legend>
-<input type="radio" value="0" id="p04_rch31" name="p04_rch3" form="p04_frm1" /><label for="p04_rch31">A to Z</label>
-<input type="radio" value="1" id="p04_rch32" name="p04_rch3" form="p04_frm1" checked="checked"/><label for="p04_rch32">Z to A</label>
+<input type="radio" value="0" id="p04_rch31" name="p04_rch3" form="p04_frm1" data-mini="true" /><label for="p04_rch31">A to Z</label>
+<input type="radio" value="1" id="p04_rch32" name="p04_rch3" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch32">Z to A</label>
 </fieldset>
 </div>
 
 <div data-role="fieldcontain">
 <label for="p04_flp1">List Filter:</label>
-<select name="p04_flp1" id="p04_flp1" data-role="slider">
+<select name="p04_flp1" id="p04_flp1" data-role="slider" data-mini="true">
 <option value="0" selected>Off</option>
 <option value="2">On</option>
 </select>
@@ -223,7 +281,7 @@ Sleeping</textarea>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d01" data-title="LOG ME v0.3">
+  <div data-role="page" id="d01" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed">
     <h2 id="d01_hdr1">Delete Record</h2>
    </header>
@@ -238,7 +296,7 @@ Sleeping</textarea>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d02" data-title="LOG ME v0.3">
+  <div data-role="page" id="d02" data-title="LOG ME v0.4">
    <header data-role="header" data-position="fixed">
     <h2>Save Changes</h2>
    </header>
@@ -256,14 +314,14 @@ Sleeping</textarea>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d03" data-title="LOG ME v0.3" data-corners="false">
+  <div data-role="page" id="d03" data-title="LOG ME v0.4" data-corners="false">
    <header data-role="header" data-position="fixed" data-theme="d" >
     <h2>About</h2>
    </header>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.31</h2>
+<h2 class="about">Version 0.42</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
