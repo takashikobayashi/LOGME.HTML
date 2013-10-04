@@ -554,7 +554,7 @@ function saveSetting() {
 
   idx = [1, 2, 3, 6, 7];
   for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];  sKey.id = idKey[1];
+    sKey.id = idKey[idx[i]];  
     val = $( "input[name='" + idKey[idx[i]] + "']:checked" ).val();
     storage.setItem( JSON.stringify( sKey ), val );
   }
