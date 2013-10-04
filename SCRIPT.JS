@@ -1,4 +1,3 @@
-
 /* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
 */
 
@@ -10,8 +9,9 @@ var storage = localStorage;
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2" ];
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5" ];
 var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
+
 
 function isKey( k ) {
   var obj = JSON.parse( k );
@@ -30,6 +30,8 @@ function store( t, getRecord ) {
 
 $(document).one( "pageinit", function( e ){
 //alert("init");
+//  checkUpdateReady();
+
   initApp();
 
   restoreSetting();
@@ -77,6 +79,23 @@ function initApp() {
   } );
 }
 
+function checkUpdateReady() {
+  var cache = window.applicationCache;
+  var location = window.location;
+  var navigator = window.navigator;
+
+  cache.addEventListener( "updateready", function() {
+    if( confirm( "New version of LOG ME is available. Would you like to update?" ) ) {
+      cache.swapCache();
+      location.reload();
+    }
+  } );
+
+  if ( navigator.onLine ) {
+    cache.update();
+  }
+}
+
 
 // #p01 functions
 
@@ -103,6 +122,20 @@ function initMainUI() {
   }
 
   initSelectUI( idKey[5], "#p01_sel1" );
+
+  val = $( "input[name='" + idKey[2] + "']:checked" ).val();
+
+  switch( val ) {
+  case "on":
+    $( "#p01_chb1" ).prop( "checked", true );
+    break;
+  case "off":
+    $( "#p01_chb1" ).prop( "checked", false );
+    break;
+  default:
+    ;// nothing to do.
+  }
+  $( "#p01_chb1" ).checkboxradio( "refresh" );
 }
 
 function recordClicked( e ) {
@@ -440,6 +473,17 @@ function initSelectUI( source, target ) {
 
 // p04 functions
 
+/* idKey
+0: #p04_txa1
+1: p04_rch1
+2: p04_rch2
+3: p04_rch3
+4: p04_flp1
+5: #p04_txa2
+6: p04_rch4
+7: p04_rch5
+*/
+
 function initSettingUI() {
   $( "#p04_btno" ).click( function( e ){
     initMainUI();
@@ -457,31 +501,28 @@ function initSettingUI() {
 }
 
 function restoreSetting() {
-  sKey.id = idKey[0];
-  var val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( idKey[0] ).val( val );
+  var i, val;
+  var idx = [0, 5];
+
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      $( idKey[idx[i]] ).val( val );
+    }
   }
 
-  sKey.id = idKey[1];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( "input[name='" + idKey[1] + "'][value='" + val + "']" ).prop( "checked", true );
-    $( "input[name='" + idKey[1] + "'][value!='" + val + "']" ).prop( "checked", false );
-  }
+  idx = [1, 2, 3, 6, 7];
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      checkRadioUI( idKey[idx[i]], val );
+    }
 
-  sKey.id = idKey[2];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( "input[name='" + idKey[2] + "'][value='" + val + "']" ).prop( "checked", true );
-    $( "input[name='" + idKey[2] + "'][value!='" + val + "']" ).prop( "checked", false );
-  }
-
-  sKey.id = idKey[3];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( "input[name='" + idKey[3] + "'][value='" + val + "']" ).prop( "checked", true );
-    $( "input[name='" + idKey[3] + "'][value!='" + val + "']" ).prop( "checked", false );
+    $( "#p04" ).one( "pagebeforeshow", function( e ){
+      $( "input[name='" + idKey[idx[i]] + "']" ).checkboxradio( "refresh" );
+    } );
   }
 
   sKey.id = idKey[4];
@@ -491,73 +532,116 @@ function restoreSetting() {
     $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
   }
 
-  sKey.id = idKey[5];
-  var val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    $( idKey[5] ).val( val );
-  }
-
   $( "#p04" ).one( "pagebeforeshow", function( e ){
-    $( "input[name='" + idKey[1] + "']" ).checkboxradio( "refresh" );
-
-    $( "input[name='" + idKey[2] + "']" ).checkboxradio( "refresh" );
-
-    $( "input[name='" + idKey[3] + "']" ).checkboxradio( "refresh" );
-
     $( "select[name='" + idKey[4] + "']" ).slider( "refresh" );
   } );
 }
 
 function saveSetting() {
-  sKey.id = idKey[0];
-  var val = $( idKey[0] ).val();
-  if( val.length > 0 ) {
+  var i, val;
+  var idx = [0, 5];
+
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];
+    val = $( idKey[idx[i]] ).val();
+    if( val.length > 0 ) {
+      storage.setItem( JSON.stringify( sKey ), val );
+    }
+    else {
+      storage.removeItem( JSON.stringify( sKey ) );
+    }
+  }
+
+  idx = [1, 2, 3, 6, 7];
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];  sKey.id = idKey[1];
+    val = $( "input[name='" + idKey[idx[i]] + "']:checked" ).val();
     storage.setItem( JSON.stringify( sKey ), val );
   }
-  else {
-    storage.removeItem( JSON.stringify( sKey ) );
-  }
-
-  sKey.id = idKey[1];
-  val = getZoomValueFromUI();
-  storage.setItem( JSON.stringify( sKey ), val );
-
-  sKey.id = idKey[2];
-  val = $( "input[name='" + idKey[2] + "']:checked" ).val();
-  storage.setItem( JSON.stringify( sKey ), val );
-
-  sKey.id = idKey[3];
-  val = $( "input[name='" + idKey[3] + "']:checked" ).val();
-  storage.setItem( JSON.stringify( sKey ), val );
 
   sKey.id = idKey[4];
   val = $( "select[name='" + idKey[4] + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
-
-  sKey.id = idKey[5];
-  val = $( idKey[5] ).val();
-  if( val.length > 0 ) {
-    storage.setItem( JSON.stringify( sKey ), val );
-  }
-  else {
-    storage.removeItem( JSON.stringify( sKey ) );
-  }
 }
 
 function postRecord() {
-  var val = $( "input[name='" + idKey[2] + "']:checked" ).val();
+  var val, opt;
+
+  // Recording Location
+  val = $( "input[name='" + idKey[2] + "']:checked" ).val();
 //alert( val );
+
   switch( val ) {
-    case "on":
-      $( "#p01_chb1" ).prop( "checked", true );
-      break;
-    case "off":
-      $( "#p01_chb1" ).prop( "checked", false );
-      break;
-    default:
-      break;
+  case "on":
+    $( "#p01_chb1" ).prop( "checked", true );
+    break;
+  case "off":
+    $( "#p01_chb1" ).prop( "checked", false );
+    break;
+  default:
+    ;// nothing to do.
   }
   $( "#p01_chb1" ).checkboxradio( "refresh" );
+
+  opt = $( "input[name='p01_opt']:checked" ).val();
+//alert( opt );
+
+  // Clearing Subtitle
+  val = $( "input[name='" + idKey[6] + "']:checked" ).val();
+//alert( val );
+
+  switch( val ) {
+  case "always":
+    $( "#p01_txt1" ).val( "" );
+    break;
+  case "withend":
+    if( opt == "End" ) {
+      $( "#p01_txt1" ).val( "" );
+    }
+    break;
+  default:
+    ;// nothing to do.
+  }
+
+  // Rotating Option
+  val = $( "input[name='" + idKey[7] + "']:checked" ).val();
+//alert( val );
+
+  switch( val ) {
+  case "bande":
+    switch( opt ) {
+    case "Begin":
+      checkRadioUI( "p01_opt", "End" );
+      break;
+    case "End":
+      checkRadioUI( "p01_opt", "Begin" );
+      break;
+    default:
+      ;// nothing to do.
+    }
+    break;
+  case "btoeton":
+    switch( opt ) {
+    case "Begin":
+      checkRadioUI( "p01_opt", "End" );
+      break;
+    case "End":
+      checkRadioUI( "p01_opt", "None" );
+      break;
+    default:
+      ;// nothing to do.
+    }
+    break;
+  default:
+    ;// nothing to do.
+  }
+
+  $( "input[name='p01_opt']" ).checkboxradio( "refresh" );
+}
+
+function checkRadioUI( target, value ) {
+  $( "input[name='" + target + "'][value='" + value + "']" ).prop( "checked", true );
+  $( "input[name='" + target + "'][value!='" + value + "']" ).prop( "checked", false );
 }
 
 function getZoomValueFromUI() {

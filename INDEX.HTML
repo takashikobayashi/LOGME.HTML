@@ -3,7 +3,7 @@
  <head>
   <title>LOG ME v0.4</title>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=0">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-capable" content="yes">
 
@@ -236,11 +236,21 @@ Billiards</textarea>
 
 <div data-role="fieldcontain">
 <fieldset data-role="controlgroup" data-type="horizontal">
-<legend>Location Zoom:</legend>
-<input type="radio" value="12" id="p04_rch11" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch11">City</label>
-<input type="radio" value="16" id="p04_rch12" name="p04_rch1" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch12">Town</label>
-<input type="radio" value="19" id="p04_rch13" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch13">Block</label>
+<legend>Clearing Subtitle:</legend>
+<input type="radio" value="always" id="p04_rch41" name="p04_rch4" form="p04_frm1" data-mini="true" /><label for="p04_rch41">Always</label>
+<input type="radio" value="withend" id="p04_rch42" name="p04_rch4" form="p04_frm1" data-mini="true"/><label for="p04_rch42">With End</label>
+<input type="radio" value="none" id="p04_rch43" name="p04_rch4" form="p04_frm1" data-mini="true" checked="checked" /><label for="p04_rch43">None</label>
 </fieldset>
+</div>
+
+<div data-role="fieldcontain">
+<fieldset data-role="controlgroup" data-type="horizontal">
+<legend>Rotating Option:</legend>
+<input type="radio" value="bande" id="p04_rch51" name="p04_rch5" form="p04_frm1" data-mini="true" /><label for="p04_rch51">B and E</label>
+<input type="radio" value="btoeton" id="p04_rch52" name="p04_rch5" form="p04_frm1" data-mini="true"/><label for="p04_rch52">B to E to N</label>
+<input type="radio" value="none" id="p04_rch53" name="p04_rch5" form="p04_frm1" data-mini="true" checked="checked" /><label for="p04_rch53">None</label>
+</fieldset>
+<p>B: Begin, E: End, N: None</p>
 </div>
 
 <div data-role="fieldcontain">
@@ -266,6 +276,15 @@ Billiards</textarea>
 <option value="0" selected>Off</option>
 <option value="2">On</option>
 </select>
+</div>
+
+<div data-role="fieldcontain">
+<fieldset data-role="controlgroup" data-type="horizontal">
+<legend>Location Zoom:</legend>
+<input type="radio" value="12" id="p04_rch11" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch11">City</label>
+<input type="radio" value="16" id="p04_rch12" name="p04_rch1" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch12">Town</label>
+<input type="radio" value="19" id="p04_rch13" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch13">Block</label>
+</fieldset>
 </div>
 
 <div id="p04_btns" data-role="fieldcontain">
@@ -321,7 +340,7 @@ Billiards</textarea>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.42</h2>
+<h2 class="about">Version 0.43</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
