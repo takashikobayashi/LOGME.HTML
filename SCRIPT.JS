@@ -520,9 +520,13 @@ function restoreSetting() {
       checkRadioUI( idKey[idx[i]], val );
     }
 
-    $( "#p04" ).one( "pagebeforeshow", function( e ){
-      $( "input[name='" + idKey[idx[i]] + "']" ).checkboxradio( "refresh" );
-    } );
+    ( function() {
+      var j = i;
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+//alert(j);
+        $( "input[name='" + idKey[idx[j]] + "']" ).checkboxradio( "refresh" );
+      } );
+    } )();
   }
 
   sKey.id = idKey[4];
