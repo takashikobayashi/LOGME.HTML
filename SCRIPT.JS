@@ -441,8 +441,8 @@ function readyForEdit( t ){
     }
   };
 
-  $( "#p03_btnu" ).unbind( "click" );
-  $( "#p03_btnu" ).click( function( e ){
+  $( "#p03_btnb" ).unbind( "click" );
+  $( "#p03_btnb" ).click( function( e ){
     initUpdateConfirmUI( t, getRecord );
   } );
 }
@@ -752,7 +752,8 @@ function initUpdateConfirmUI( t, getRecord ){
 
   $( "#d02_btnc" ).unbind( "click" );
   $( "#d02_btnc" ).click( function( e ){
-    $( "#d02" ).dialog( "close" );
+//    $( "#d02" ).dialog( "close" );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   } );
 
   $( "#d02" ).one( "pagebeforeshow", function( e ){
