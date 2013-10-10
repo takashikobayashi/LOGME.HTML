@@ -1,7 +1,7 @@
 <!DOCTYPE html> 
 <html>
  <head>
-  <title>LOG ME v0.4</title>
+  <title>LOG ME v0.5</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=0">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,11 +26,10 @@ $(document).bind("mobileinit", function(){
  </head>
  <body>
 
-  <div data-role="page" id="p01" data-title="LOG ME v0.4">
+  <div data-role="page" id="p01" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p04" data-icon="gear" data-direction="reverse"  >Setting</a>
     <h1>LOG ME</h1>
-    <a href="#p02" data-icon="bars">List</a>
    </header><!-- /header -->
    <div data-role="content" id="p01_cont">
 
@@ -82,16 +81,20 @@ $(document).bind("mobileinit", function(){
 </form>
 
    </div><!-- /content -->
-   <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
-&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
+   <footer data-role="footer" data-position="fixed" data-id="footer01">
+<div data-role="navbar" data-iconpos="left" >
+<ul>
+<li><a href="#" data-icon="star" class="ui-btn-active ui-state-persist">Rec</a></li>
+<li><a href="#p02" data-icon="bars">List</a></li>
+</ul>
+</div>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p02" data-title="LOG ME v0.4">
+  <div data-role="page" id="p02" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed" data-id="header01">
-    <a href="#p01" data-icon="arrow-l" data-direction="reverse">Back</a>
     <h1>LOG ME</h1>
-    <a href="#" data-icon="arrow-u" onClick="toggleList()" id="p02_btnt"><span id="p02_lblt">On</span></a>
+    <a href="#" data-icon="arrow-u" onClick="toggleList()" id="p02_btnt" class="ui-btn-right"><span id="p02_lblt">On</span></a>
    </header><!-- /header -->
    <div data-role="content" id="p02_cont">
 
@@ -106,14 +109,19 @@ $(document).bind("mobileinit", function(){
 </form>
 
    </div><!-- /content -->
-   <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
-&copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
-   </footer><!-- /footer -->
+   <footer data-role="footer" data-position="fixed" data-id="footer01">
+<div data-role="navbar" data-iconpos="left" >
+<ul>
+<li><a href="#p01" data-icon="star" data-direction="reverse">Rec</a></li>
+<li><a href="#" data-icon="bars" class="ui-btn-active ui-state-persist">List</a></li>
+</ul>
+</div>
+  </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p03" data-title="LOG ME v0.4">
+  <div data-role="page" id="p03" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed" data-id="header01">
-    <a href="#p02" data-icon="arrow-l" data-direction="reverse">Back</a>
+    <a href="#" data-icon="arrow-l" data-direction="reverse" id="p03_btnb">Back</a>
     <h1>LOG ME</h1>
    </header><!-- /header -->
 
@@ -190,22 +198,21 @@ $(document).bind("mobileinit", function(){
 </div>
 
 <div id="p03_btns" data-role="fieldcontain">
-<input type="button" name="p03_btnu" value="Save Changes" id ="p03_btnu" form="p03_frm1" data-theme="b" data-icon="check" />
 <input type="button" name="p03_btnd" value="Delete This Record" id ="p03_btnd" form="p03_frm1" data-icon="delete" />
 </div>
 </form>
    </div><!-- /content -->   
 
-   <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
+   <!--footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
 &copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p04" data-title="LOG ME v0.4">
+  <div data-role="page" id="p04" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#d03" data-icon="info" data-rel="dialog" data-transition="slideup">About</a>
     <h1>LOG ME</h1>
-    <a href="#p01" data-icon="arrow-r" onClick="restoreSetting()" >Cancel</a>
+    <a href="#p01" data-icon="arrow-r" onClick="restoreSetting()" class="ui-btn-right">Back</a>
    </header><!-- /header -->
 
    <div data-role="content" id="p04_cont">
@@ -295,12 +302,12 @@ Billiards</textarea>
 </form>
 
    </div><!-- /content -->
-   <footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
+   <!--footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
 &copy; 2013 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d01" data-title="LOG ME v0.4">
+  <div data-role="page" id="d01" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed">
     <h2 id="d01_hdr1">Delete Record</h2>
    </header>
@@ -315,7 +322,7 @@ Billiards</textarea>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d02" data-title="LOG ME v0.4">
+  <div data-role="page" id="d02" data-title="LOG ME v0.5">
    <header data-role="header" data-position="fixed">
     <h2>Save Changes</h2>
    </header>
@@ -326,21 +333,21 @@ Billiards</textarea>
 <input type="button" name="d02_btnu" value="Save Changes" id ="d02_btnu" form="d02_frm1" data-theme="b" data-icon="check" />
 <input type="button" name="d02_btnn" value="Save As New Record" id ="d02_btnn" form="d02_frm1" data-icon="plus" />
 <input type="button" name="d02_btnd" value="Update Description" id ="d02_btnd" form="d02_frm1" data-icon="plus" />
-<input type="button" name="d02_btnc" value="Cancel" id ="d02_btnc" form="d02_frm1" data-icon="delete" />
+<input type="button" name="d02_btnc" value="Discard Changes" id ="d02_btnc" form="d02_frm1" data-icon="delete" />
 </div>
 </form>
 <!--a href="#p03">p03</a-->
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d03" data-title="LOG ME v0.4" data-corners="false">
+  <div data-role="page" id="d03" data-title="LOG ME v0.5" data-corners="false">
    <header data-role="header" data-position="fixed" data-theme="d" >
     <h2>About</h2>
    </header>
    <div data-role="content" id="d03_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.43</h2>
+<h2 class="about">Version 0.5</h2>
 <div class="about">
 Copyright 2013 SUMO_NINJA_JP
 <br>
