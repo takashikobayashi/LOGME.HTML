@@ -34,9 +34,7 @@ $(document).one( "pageinit", function( e ){
 
   initApp();
 
-  restoreSetting();
   initSettingUI();
-
   initMainUI();
   initEditUI();
 } );
@@ -441,10 +439,39 @@ function readyForEdit( t ){
     }
   };
 
-  $( "#p03_btnb" ).unbind( "click" );
-  $( "#p03_btnb" ).click( function( e ){
-    initUpdateConfirmUI( t, getRecord );
+  $( "#p03_btn2" ).unbind( "click" );
+  $( "#p03_btn2" ).click( function( e ){
+    if( isSameRecord( record, getRecord() ) ) {
+      $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
+    }
+    else {
+      initUpdateConfirmUI( t, getRecord );
+    }
   } );
+}
+
+function isSameRecord( cr, nr ) {
+//alert( JSON.stringify(cr) );
+//alert( JSON.stringify(nr) );
+  return (
+  cr.val == nr.val && 
+  cr.opt == nr.opt && 
+  cr.sub == nr.sub && 
+  ( ( cr.lat == undefined && 
+      cr.lng == undefined && 
+      nr.lat == undefined && 
+      nr.lng == undefined ) 
+  ||( cr.lat != undefined && 
+      nr.lat != undefined && 
+      cr.lng != undefined && 
+      nr.lng != undefined && 
+      cr.lat == nr.lat && 
+      cr.lng == nr.lng ) ) && 
+  ( ( cr.dsc == undefined && 
+      $( "#p03_txa1" ).val().length == 0 )
+  ||( cr.dsc != undefined && 
+      cr.dsc == $( "#p03_txa1" ).val() ) )
+  );
 }
 
 function initEditUI() {
@@ -485,19 +512,52 @@ function initSelectUI( source, target ) {
 */
 
 function initSettingUI() {
-  $( "#p04_btno" ).click( function( e ){
-    initMainUI();
-    initEditUI();
-    saveSetting();
+  restoreSetting();
 
-    $.mobile.changePage( "#p01" );
+  $( "#p04_btnb" ).click( function( e ){
+    if( isSettingChanged() ) {
+      initSaveSettingConfirmUI();
+    }
+    else {
+      $.mobile.changePage( "#p01", { transition: "slide" } );
+    }
   } );
 
-  $( "#p04_btnc" ).click( function( e ){
-    $.mobile.changePage( "#p01" );
+  saveSetting();
+}
 
-    restoreSetting();
-  } );
+function isSettingChanged() {
+  var ret = true;
+  var i, val;
+  var idx = [0, 5];
+
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];
+    val = storage.getItem( JSON.stringify( sKey ) );
+    ret = ret && 
+    ( ( val != null && 
+        $( idKey[idx[i]] ).val() == val )
+     || val == null );
+  }
+
+  idx = [1, 2, 3, 6, 7];
+  for( i = 0; i < idx.length; i++ ) {
+    sKey.id = idKey[idx[i]];
+    val = storage.getItem( JSON.stringify( sKey ) );
+    ret = ret &&
+    ( ( val != null && 
+        $( "input[name='" + idKey[idx[i]] + "']:checked" ).val() == val )
+     || val == null );
+  }
+
+  sKey.id = idKey[4];
+  val = storage.getItem( JSON.stringify( sKey ) );
+  ret = ret &&
+  ( ( val != null &&
+      $( "select[name='" + idKey[4] + "'] option:selected" ).val() == val )
+   || val == null );
+//alert(ret);
+  return ! ret;
 }
 
 function restoreSetting() {
@@ -532,8 +592,7 @@ function restoreSetting() {
   sKey.id = idKey[4];
   val = storage.getItem( JSON.stringify( sKey ) );
   if( val != null ) {
-    $( "select[name='" + idKey[4] + "'] option[value='" + val + "']" ).prop( "selected", true );
-    $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
+    selectSelectUI( idKey[4], val );
   }
 
   $( "#p04" ).one( "pagebeforeshow", function( e ){
@@ -597,10 +656,12 @@ function postRecord() {
   switch( val ) {
   case "always":
     $( "#p01_txt1" ).val( "" );
+    selectSelectUI( "p01_sel1", "" );
     break;
   case "withend":
     if( opt == "End" ) {
       $( "#p01_txt1" ).val( "" );
+      selectSelectUI( "p01_sel1", "" );
     }
     break;
   default:
@@ -648,6 +709,11 @@ function checkRadioUI( target, value ) {
   $( "input[name='" + target + "'][value!='" + value + "']" ).prop( "checked", false );
 }
 
+function selectSelectUI( target, value ) {
+  $( "select[name='" + target + "'] option[value='" + value + "']" ).prop( "selected", true );
+  $( "select[name='" + target + "'] option[value!='" + value + "']" ).prop( "selected", false );
+}
+
 function getZoomValueFromUI() {
   return $( "input[name='" + idKey[1] + "']:checked" ).val();
 }
@@ -663,13 +729,11 @@ function getModeValueFromUI() {
 function setModeValueToUI( mode ) {
   var val = mode % 2;
 //alert("radio: "+val);
-  $( "input[name='" + idKey[3] + "'][value='" + val + "']" ).prop( "checked", true );
-  $( "input[name='" + idKey[3] + "'][value!='" + val + "']" ).prop( "checked", false );
+  checkRadioUI( idKey[3], val );
 
   val = mode - ( mode % 2 );
 //alert("flip: "+val);
-  $( "select[name='" + idKey[4] + "'] option[value='" + val + "']" ).prop( "selected", true );
-  $( "select[name='" + idKey[4] + "'] option[value!='" + val + "']" ).prop( "selected", false );
+  selectSelectUI( idKey[4], val );
 
   $( "#p04" ).one( "pagebeforeshow", function( e ){
     $( "input[name='" + idKey[3] + "']" ).checkboxradio( "refresh" );
@@ -681,6 +745,33 @@ function setModeValueToUI( mode ) {
 
 // d01 functions
 
+function initSaveSettingConfirmUI() {
+  $( "#d01_hdr1" ).text( "Save Settings" );
+
+  $( "#d01_msg1" ).text( "Save and apply setting changes ? if you choose cancel, all changes are discarded." );
+
+  $( "#d01_btno" ).button( { theme: "b" } );
+  $( "#d01_btnc" ).button( { theme: "c" } );
+
+  $( "#d01_btno" ).unbind( "click" );
+  $( "#d01_btno" ).click( function( e ){
+    initMainUI();
+    initEditUI();
+    saveSetting();
+
+    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+  } );
+
+  $( "#d01_btnc" ).unbind( "click" );
+  $( "#d01_btnc" ).click( function( e ){
+    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+
+    restoreSetting();
+  } );
+
+  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+}
+
 function initDeleteConfirmUI( t ){
   var d = new Date();
   d.setTime( t );
@@ -688,6 +779,9 @@ function initDeleteConfirmUI( t ){
   $( "#d01_hdr1" ).text( "Delete Record" );
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" );
+
+  $( "#d01_btno" ).button( { theme: "c" } );
+  $( "#d01_btnc" ).button( { theme: "b" } );
 
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
@@ -717,6 +811,9 @@ function initDeleteAllConfirmUI(){
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete all records ?" );
 
+  $( "#d01_btno" ).button( { theme: "c" } );
+  $( "#d01_btnc" ).button( { theme: "b" } );
+
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
     clearRecords();
@@ -739,21 +836,16 @@ function initUpdateConfirmUI( t, getRecord ){
   var d = new Date();
   d.setTime( t );
 
-  $( "#d02_msg1" ).text( "To save as new record, another date or time is needed. if you choose update description, other changes are discarded." );
+  $( "#d02_msg1" ).text( "To save as new record, another date or time is needed. if you choose discard changes, no changes are saved." );
 
   $( "#d02_btnd" ).unbind( "click" );
   $( "#d02_btnd" ).click( function( e ){
-    if( $( "#p03_txa1" ).val().length > 0 ){
-      addDescription( t, $( "#p03_txa1" ).val() );
-    }
-
-    $( "#d02" ).dialog( "close" );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   } );
 
   $( "#d02_btnc" ).unbind( "click" );
   $( "#d02_btnc" ).click( function( e ){
-//    $( "#d02" ).dialog( "close" );
-    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+    $( "#d02" ).dialog( "close" );
   } );
 
   $( "#d02" ).one( "pagebeforeshow", function( e ){
