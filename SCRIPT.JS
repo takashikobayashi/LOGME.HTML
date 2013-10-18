@@ -36,7 +36,7 @@ $(document).one( "pageinit", function( e ){
 
   initSettingUI();
   initMainUI();
-  initEditUI();
+  updateMenus();
 } );
 
 function initApp() {
@@ -118,8 +118,6 @@ function initMainUI() {
       $( "#p01_btn" + i ).click( recordClicked );
     }
   }
-
-  initSelectUI( idKey[5], "#p01_sel1" );
 
   val = $( "input[name='" + idKey[2] + "']:checked" ).val();
 
@@ -245,7 +243,7 @@ function updateList() {
 
   if( storage.length > 0 ) {
     keys = [];
-    for( var i = 0; i < storage.length; i++ ) {
+    for( i = 0; i < storage.length; i++ ) {
       k = storage.key(i);
       if( isKey( k ) ) {
         keys.push( JSON.parse( k ).time );
@@ -474,18 +472,22 @@ function isSameRecord( cr, nr ) {
   );
 }
 
-function initEditUI() {
-  initSelectUI( idKey[0], "#p03_sel1" );
-  initSelectUI( idKey[5], "#p03_sel2" );
-}
-
-function initSelectUI( source, target ) {
+function initSelectUI( source, target, adds ) {
   var elms, i;
   var result = "<option value=\"\" selected=\"selected\"></option>";
   var val = $( source ).val();
 
   if( val != null && val.length > 0 ) {
     elms = toTrimedStringArray( val );
+
+    if( adds != null ) {
+alert(adds);
+      for( i = 0; i < adds.length; i++ ) {
+        if( elms.indexOf( adds[i] ) == -1 ) {
+          elms.push( adds[i] );
+        }
+      }
+    }
 
     for( i = 0; i < elms.length; i++ ) {
       result += "<option value=\"" + elms[i] + "\">" + removeTag( elms[i] ) + "</option>";
@@ -495,6 +497,76 @@ function initSelectUI( source, target ) {
     $( target ).append( result );
     $( target ).trigger( "create" );
   }
+}
+
+function updateMenus() {
+  var i, j, t;
+  var vals, subs, k;
+  var obj;
+  var vala, suba;;
+
+  vals = [];
+  subs = [];
+  for( i = 0; i < storage.length; i++ ) {
+    k = storage.key(i);
+    if( ! isKey( k ) ) {
+      continue;
+    }
+    obj = JSON.parse( storage.getItem( k ) );
+    t = JSON.parse( k ).time;
+
+    for( j = 0; j < vals.length; j++ ) {
+      if( vals[j].val == obj.val ) {
+        if( t > vals[j].time ) {
+          vals[j].time = t;
+        }
+        ++( vals[j].num );
+        break;
+      }
+    }
+    if( j >= vals.length ) {
+      vals.push( {"val":obj.val,"time":t,"num":1} );
+    }
+
+    if( obj.sub == "" ) {
+      continue;
+    }
+    for( j = 0; j < subs.length; j++ ) {
+      if( subs[j].sub == obj.sub ) {
+        if( t > subs[j].time ) {
+          subs[j].time = t;
+        }
+        ++( subs[j].num );
+        break;
+      }
+    }
+    if( j >= subs.length ) {
+      subs.push( {"sub":obj.sub,"time":t,"num":1} );
+    }
+  }
+
+  // reverse sort z -> a
+  vals.sort( function( a, b ) {
+    return b.num - a.num;
+  } );
+  vala = [];
+  for( i = 0; i < vals.length; i++ ) {
+    vala.push( vals[i].val );
+  }
+//alert( vala + i );
+
+  subs.sort( function( a, b ) {
+    return a.time - b.time;
+  } );
+  suba = [];
+  for( i = 0; i < subs.length; i++ ) {
+    suba.push( subs[i].sub );
+  }
+//alert( suba + i );
+
+  initSelectUI( idKey[5], "#p01_sel1", suba );
+  initSelectUI( idKey[0], "#p03_sel1", vala );
+  initSelectUI( idKey[5], "#p03_sel2", suba );
 }
 
 
@@ -756,7 +828,7 @@ function initSaveSettingConfirmUI() {
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
     initMainUI();
-    initEditUI();
+    updateMenus();
     saveSetting();
 
     $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
