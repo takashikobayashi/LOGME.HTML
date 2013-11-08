@@ -29,7 +29,7 @@ function store( t, getRecord ) {
 
 
 $(document).one( "pageinit", function( e ){
-//  checkUpdateReady();
+  checkUpdateReady();
 
   initApp();
 
@@ -76,12 +76,13 @@ function initApp() {
 }
 
 function checkUpdateReady() {
+//alert("check ready");
   var cache = window.applicationCache;
   var location = window.location;
   var navigator = window.navigator;
 
   cache.addEventListener( "updateready", function() {
-    if( confirm( "New version of LOG ME is available. Would you like to update?" ) ) {
+    if( confirm( "LOG ME: module updated.\nWould you like to apply now?" ) ) {
       cache.swapCache();
       location.reload();
     }
@@ -180,11 +181,6 @@ function initMainUI() {
     if( i >= vals.length ) {
       vals.push( {"val":val,"time":t,"num":1} );
     }
-
-    vals.sort( function( a, b ) {
-      // reverse sort z -> a
-      return b.num - a.num;
-    } );
   }
 
   function addSubArray( t, sub ) {
@@ -205,16 +201,17 @@ function initMainUI() {
     if( i >= subs.length ) {
       subs.push( {"sub":sub,"time":t,"num":1} );
     }
-
-    subs.sort( function( a, b ) {
-      // reverse sort z -> a
-      return b.time - a.time;
-    } );
   }
 
   function updateTitleMenu() {
     var i;
     var vala = [];
+
+    vals.sort( function( a, b ) {
+      // reverse sort z -> a
+      return b.num - a.num;
+    } );
+
     for( i = 0; i < vals.length; i++ ) {
       vala.push( vals[i].val );
     }
@@ -225,6 +222,12 @@ function initMainUI() {
   function updateSubMenu() {
     var i;
     var suba = [];
+
+    subs.sort( function( a, b ) {
+      // reverse sort z -> a
+      return b.time - a.time;
+    } );
+
     for( i = 0; i < subs.length; i++ ) {
       suba.push( subs[i].sub );
     }
@@ -624,11 +627,11 @@ function initSettingUI() {
   saveSetting();
 }
 
-function isSettingChanged( t ) {
+function isSettingChanged() {
   var ret = true;
   var i, val;
-  var idx = [0, 5];
 
+  var idx = [0, 5];
   for( i = 0; i < idx.length; i++ ) {
     sKey.id = idKey[idx[i]];
     val = storage.getItem( JSON.stringify( sKey ) );
@@ -660,8 +663,8 @@ function isSettingChanged( t ) {
 
 function restoreSetting() {
   var i, val;
-  var idx = [0, 5];
 
+  var idx = [0, 5];
   for( i = 0; i < idx.length; i++ ) {
     sKey.id = idKey[idx[i]];
     val = storage.getItem( JSON.stringify( sKey ) );
@@ -700,8 +703,8 @@ function restoreSetting() {
 
 function saveSetting() {
   var i, val;
-  var idx = [0, 5];
 
+  var idx = [0, 5];
   for( i = 0; i < idx.length; i++ ) {
     sKey.id = idKey[idx[i]];
     val = $( idKey[idx[i]] ).val();
