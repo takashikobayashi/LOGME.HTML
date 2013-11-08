@@ -89,7 +89,7 @@ function checkUpdateReady() {
   } );
 
   if( navigator.onLine ) {
-//    cache.update();
+    cache.update();
   }
 }
 
