@@ -1,4 +1,4 @@
-/* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013 twitter@sumo_ninja_jp
+/* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013-2014 twitter@sumo_ninja_jp
 */
 
 $.event.special.swipe.horizontalDistanceThreshold = 100;
@@ -29,7 +29,7 @@ function store( t, getRecord ) {
 
 
 $(document).one( "pageinit", function( e ){
-  checkUpdateReady();
+//  checkUpdateReady();
 
   initApp();
 
@@ -38,6 +38,7 @@ $(document).one( "pageinit", function( e ){
 } );
 
 function initApp() {
+//alert("initApp: begin");
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
     addToSubtitle( e.target.value, "#p01_txt1" );
@@ -73,10 +74,11 @@ function initApp() {
   $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
     $.mobile.changePage( "#p02", { transition: "slide" } );
   } );
+//alert("initApp: end");
 }
 
 function checkUpdateReady() {
-//alert("check ready");
+//alert("checkUpdateReady: begin");
   var cache = window.applicationCache;
   var location = window.location;
   var navigator = window.navigator;
@@ -91,12 +93,14 @@ function checkUpdateReady() {
   if( navigator.onLine ) {
     cache.update();
   }
+//alert("checkUpdateReady: end");
 }
 
 
 // #p01 functions
 
 function initMainUI() {
+//alert("initMainUI: begin");
   var i;
   var result = "";
   var elms;
@@ -236,6 +240,7 @@ function initMainUI() {
     initSelectUI( idKey[5], "#p01_sel1", suba );
     initSelectUI( idKey[5], "#p03_sel2", suba );
   }
+//alert("initMainUI: end");
 }
 
 function recordClicked( t, val ) {
@@ -320,10 +325,10 @@ function updateButtons() {
   }
 
   if( ( ( mode + 1 ) % 4 ) % 2 == 1 ) {
-    $( "#p02_btnt" ).buttonMarkup({ icon: "arrow-d" });
+    $( "#p02_btnt" ).buttonMarkup({ icon: "carat-d" });
   }
   else {
-    $( "#p02_btnt" ).buttonMarkup({ icon: "arrow-u" });
+    $( "#p02_btnt" ).buttonMarkup({ icon: "carat-u" });
   }
   $( "#p02_btnt" ).buttonMarkup( "refresh" );
 
@@ -385,11 +390,10 @@ function updateList() {
       if( v.sub.length > 0 ) {
         result += " " + v.sub;
       }
-      result += "</a>";
       if( v.lat != undefined && v.lng != undefined ) {
         result += "<span class='ui-li-count'>!</span>";
       }
-      result+="</li>";
+      result += "</a></li>";
 
     }
     result += "</ul>";
@@ -613,6 +617,7 @@ function initSelectUI( source, target, adds ) {
 */
 
 function initSettingUI() {
+//alert("initSettingUI: begin");
   restoreSetting();
 
   $( "#p04_btnb" ).click( function( e ){
@@ -625,6 +630,7 @@ function initSettingUI() {
   } );
 
   saveSetting();
+//alert("initSettingUI: end");
 }
 
 function isSettingChanged() {
@@ -847,8 +853,10 @@ function initSaveSettingConfirmUI() {
 
   $( "#d01_msg1" ).text( "Save and apply setting changes ? if you choose cancel, all changes are discarded." );
 
+  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
+  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
   $( "#d01_btno" ).button( { theme: "b" } );
-  $( "#d01_btnc" ).button( { theme: "c" } );
+  $( "#d01_btnc" ).button( { theme: "a" } );
 
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
@@ -876,7 +884,9 @@ function initDeleteConfirmUI( t ){
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" );
 
-  $( "#d01_btno" ).button( { theme: "c" } );
+  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
+  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
+  $( "#d01_btno" ).button( { theme: "a" } );
   $( "#d01_btnc" ).button( { theme: "b" } );
 
   $( "#d01_btno" ).unbind( "click" );
@@ -907,7 +917,9 @@ function initDeleteAllConfirmUI(){
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete all records ?" );
 
-  $( "#d01_btno" ).button( { theme: "c" } );
+  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
+  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
+  $( "#d01_btno" ).button( { theme: "a" } );
   $( "#d01_btnc" ).button( { theme: "b" } );
 
   $( "#d01_btno" ).unbind( "click" );
