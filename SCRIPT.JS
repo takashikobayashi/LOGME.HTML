@@ -690,8 +690,9 @@ function restoreSetting() {
     ( function() {
       var j = i;
       $( "#p04" ).one( "pagebeforeshow", function( e ){
-//alert(j);
+//alert("refreshCheckbox["+j+"]: begin");
         $( "input[name='" + idKey[idx[j]] + "']" ).checkboxradio( "refresh" );
+//alert("refreshCheckbox["+j+"]: end");
       } );
     } )();
   }
@@ -703,7 +704,9 @@ function restoreSetting() {
   }
 
   $( "#p04" ).one( "pagebeforeshow", function( e ){
-    $( "select[name='" + idKey[4] + "']" ).slider( "refresh" );
+//alert("refreshFlip: begin");
+    $( "select[name='" + idKey[4] + "']" ).flipswitch( "refresh" );
+//alert("refreshFlip: end");
   } );
 }
 
@@ -841,7 +844,7 @@ function setModeValueToUI( mode ) {
   $( "#p04" ).one( "pagebeforeshow", function( e ){
     $( "input[name='" + idKey[3] + "']" ).checkboxradio( "refresh" );
 
-    $( "select[name='" + idKey[4] + "']" ).slider( "refresh" );
+    $( "select[name='" + idKey[4] + "']" ).flipswitch( "refresh" );
   } );
 }
 
