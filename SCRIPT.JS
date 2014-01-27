@@ -325,12 +325,13 @@ function updateButtons() {
   }
 
   if( ( ( mode + 1 ) % 4 ) % 2 == 1 ) {
-    $( "#p02_btnt" ).buttonMarkup({ icon: "carat-d" });
+    $( "#p02_btnt" ).toggleClass( "ui-icon-carat-u", false );
+    $( "#p02_btnt" ).toggleClass( "ui-icon-carat-d", true );
   }
   else {
-    $( "#p02_btnt" ).buttonMarkup({ icon: "carat-u" });
+    $( "#p02_btnt" ).toggleClass( "ui-icon-carat-u", true );
+    $( "#p02_btnt" ).toggleClass( "ui-icon-carat-d", false );
   }
-  $( "#p02_btnt" ).buttonMarkup( "refresh" );
 
   if( mode >= 2 ) {
     $( "#p02_btnc" ).button( "disable" );
@@ -407,6 +408,13 @@ function updateList() {
 function clearClicked( e ) {
   confirmDeleteAll();
   $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
+}
+
+function confirmDeleteAll() {
+  if( confirm( "Are you sure, you would like to delete all records ?" ) ){
+    clearRecords();
+    showRecords();
+  }
 }
 
 function clearRecords() {
@@ -547,7 +555,7 @@ function readyForEdit( t ){
       $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
     }
     else {
-      initUpdateConfirmUI( t, getRecord );
+      confirmUpdate( t, getRecord );
     }
   } );
 }
@@ -599,6 +607,24 @@ function initSelectUI( source, target, adds ) {
     $( target ).empty();
     $( target ).append( result );
     $( target ).trigger( "create" );
+  }
+}
+
+function confirmDelete( t ) {
+  var d = new Date();
+  d.setTime( t );
+
+  if( confirm( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" ) ) {
+    deleteRecord( t );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+  }
+}
+
+function deleteRecord( t ) {
+  vKey.time = t;
+  var k = JSON.stringify( vKey );
+  if( isKey( k ) ) {
+    storage.removeItem( k );
   }
 }
 
@@ -848,51 +874,22 @@ function setModeValueToUI( mode ) {
   } );
 }
 
-
-// d01 functions
-
 function confirmSaveSetting() {
   if( confirm( "Save and apply setting changes ? if you choose cancel, all changes are discarded." ) ) {
     initMainUI();
     saveSetting();
-
     $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
   }
   else {
     $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
-
     restoreSetting();
   }
 }
 
-function confirmDelete( t ) {
-  var d = new Date();
-  d.setTime( t );
 
-  if( confirm( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" ) ) {
-    deleteRecord( t );
-    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-  }
-}
+// p06 functions
 
-function deleteRecord( t ) {
-  vKey.time = t;
-  var k = JSON.stringify( vKey );
-  if( isKey( k ) ) {
-    storage.removeItem( k );
-  }
-}
-
-function confirmDeleteAll() {
-  if( confirm( "Are you sure, you would like to delete all records ?" ) ){
-     clearRecords();
-  }
-}
-
-
-// d02 functions
-
-function initUpdateConfirmUI( t, getRecord ){
+function confirmUpdate( t, getRecord ){
 //alert("initUpdateConfirm: begin");
   var doUpdate, doSaveNew;
   var dd = getDateFromUI();
@@ -920,7 +917,6 @@ function initUpdateConfirmUI( t, getRecord ){
   else {
     doUpdate = function( e ) {
       if( isOverwrite( dd.getTime() ) ){
-      
         restore( dd.getTime(), getRecord );
         deleteRecord( t );
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
@@ -984,16 +980,6 @@ function addDescription( t, desc ){
 
   store( t, getRecord );
 }
-
-
-// d03 functions
-
-/*
-$( "#d03" ).on( "pagebeforeshow", function( e ){
-  $( "#d03_mem" ).empty();
-  $( "#d03_mem" ).text( "" + "" );
-});
-*/
 
 
 // utility functions
