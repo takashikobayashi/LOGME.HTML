@@ -405,6 +405,7 @@ function updateList() {
 }
 
 function clearClicked( e ) {
+  //confirmDeleteAll();
   initDeleteAllConfirmUI();
   $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
@@ -525,6 +526,7 @@ function readyForEdit( t ){
 
   $( "#p03_btnd" ).unbind( "click" );
   $( "#p03_btnd" ).click( function( e ){
+      //confirmDelete( t );
       initDeleteConfirmUI( t );
   } );
 
@@ -622,6 +624,8 @@ function initSettingUI() {
 
   $( "#p04_btnb" ).click( function( e ){
     if( isSettingChanged() ) {
+      //confirmSaveSetting();
+
       initSaveSettingConfirmUI();
     }
     else {
@@ -851,13 +855,28 @@ function setModeValueToUI( mode ) {
 
 // d01 functions
 
+function confirmSaveSetting() {
+  if( confirm( "Save and apply setting changes ? if you choose cancel, all changes are discarded." ) ) {
+    initMainUI();
+    saveSetting();
+
+    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+  }
+  else {
+    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+
+    restoreSetting();
+  }
+}
+
+
 function initSaveSettingConfirmUI() {
   $( "#d01_hdr1" ).text( "Save Settings" );
 
   $( "#d01_msg1" ).text( "Save and apply setting changes ? if you choose cancel, all changes are discarded." );
 
-  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
-  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
+  $( "#d01_btns .ui-btn-a" ).toggleClass( "ui-btn-a" );
+  $( "#d01_btns .ui-btn-b" ).toggleClass( "ui-btn-b" );
   $( "#d01_btno" ).button( { theme: "b" } );
   $( "#d01_btnc" ).button( { theme: "a" } );
 
@@ -876,7 +895,18 @@ function initSaveSettingConfirmUI() {
     restoreSetting();
   } );
 
-  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+//  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+  $.mobile.changePage( "#d01", { transition: "pop" } );
+}
+
+function confirmDelete( t ) {
+  var d = new Date();
+  d.setTime( t );
+
+  if( confirm( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" ) ) {
+    deleteRecord( t );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+  }
 }
 
 function initDeleteConfirmUI( t ){
@@ -887,8 +917,8 @@ function initDeleteConfirmUI( t ){
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" );
 
-  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
-  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
+  $( "#d01_btns .ui-btn-a" ).toggleClass( "ui-btn-a" );
+  $( "#d01_btns .ui-btn-b" ).toggleClass( "ui-btn-b" );
   $( "#d01_btno" ).button( { theme: "a" } );
   $( "#d01_btnc" ).button( { theme: "b" } );
 
@@ -900,10 +930,13 @@ function initDeleteConfirmUI( t ){
 
   $( "#d01_btnc" ).unbind( "click" );
   $( "#d01_btnc" ).click( function( e ){
-    $( "#d01" ).dialog( "close" );
+    $.mobile.changePage( "#p03", { transition: "pop", reverse: true } );
+
+    //$( "#d01" ).dialog( "close" );
   } );
 
-  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+//  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+  $.mobile.changePage( "#d01", { transition: "pop" } );
 }
 
 function deleteRecord( t ) {
@@ -914,91 +947,92 @@ function deleteRecord( t ) {
   }
 }
 
+function confirmDeleteAll() {
+  if( confirm( "Are you sure, you would like to delete all records ?" ) ){
+     clearRecords();
+  }
+}
+
 function initDeleteAllConfirmUI(){
 
   $( "#d01_hdr1" ).text( "Delete All" );
 
   $( "#d01_msg1" ).text( "Are you sure, you would like to delete all records ?" );
 
-  $("#d01_btns .ui-btn-a").toggleClass("ui-btn-a");
-  $("#d01_btns .ui-btn-b").toggleClass("ui-btn-b");
+  $( "#d01_btns .ui-btn-a" ).toggleClass( "ui-btn-a" );
+  $( "#d01_btns .ui-btn-b" ).toggleClass( "ui-btn-b" );
   $( "#d01_btno" ).button( { theme: "a" } );
   $( "#d01_btnc" ).button( { theme: "b" } );
 
   $( "#d01_btno" ).unbind( "click" );
   $( "#d01_btno" ).click( function( e ){
     clearRecords();
-    $( "#d01" ).dialog( "close" );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+
+    //$( "#d01" ).dialog( "close" );
   } );
 
   $( "#d01_btnc" ).unbind( "click" );
   $( "#d01_btnc" ).click( function( e ){
-    $( "#d01" ).dialog( "close" );
+    $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+
+  //  $( "#d01" ).dialog( "close" );
   } );
 
-  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+//  $.mobile.changePage( "#d01", { role: "dialog", transition: "pop" } );
+  $.mobile.changePage( "#d01", { transition: "pop" } );
 }
 
 
 // d02 functions
 
 function initUpdateConfirmUI( t, getRecord ){
+//alert("initUpdateConfirm: begin");
+  var doUpdate, doSaveNew;
   var dd = getDateFromUI();
   var d = new Date();
   d.setTime( t );
 
-  $( "#d02_msg1" ).text( "To save as new record, another date or time is needed. if you choose discard changes, no changes are saved." );
-
-  $( "#d02_btnd" ).unbind( "click" );
-  $( "#d02_btnd" ).click( function( e ){
+  $( "#p03_btnc" ).unbind( "click" );
+  $( "#p03_btnc" ).click( function( e ){
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   } );
 
-  $( "#d02_btnc" ).unbind( "click" );
-  $( "#d02_btnc" ).click( function( e ){
-    $( "#d02" ).dialog( "close" );
-  } );
+  $( "#p03_btnu" ).unbind( "click" );
+  $( "#p03_btnn" ).unbind( "click" );
 
-  $( "#d02" ).one( "pagebeforeshow", function( e ){
-    if( isSameISODate( d, dd ) ){
-      $( "#d02_btnn" ).button( "disable" );
-      $( "#d02_btnn" ).unbind( "click" );
-
-      $( "#d02_btnu" ).unbind( "click" );
-      $( "#d02_btnu" ).click( function( e ){
+  if( isSameISODate( d, dd ) ){
+    doUpdate = function( e ){
         restore( t, getRecord );
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-      } );
-    }
-    else{
-      $( "#d02_btnn" ).button( "enable" );
-      $( "#d02_btnn" ).unbind( "click" );
-      $( "#d02_btnn" ).click( function( e ){
-        if( isOverwrite( dd.getTime() ) ) {
-          restore( dd.getTime(), getRecord );
-          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-        }
-        else {
-          $( "#d02" ).dialog( "close" );
-        }
-      } );
+    };
+    doSaveNew = function( e ){
+      alert( "Date or time must be changed." );
+    };
+    $( "#p03_btnn" ).toggleClass( "ui-state-disabled", true );
+  }
+  else {
+    doUpdate = function( e ) {
+      if( isOverwrite( dd.getTime() ) ){
+      
+        restore( dd.getTime(), getRecord );
+        deleteRecord( t );
+        $.mobile. changePage( "#p02", { transition: "pop", reverse: true } );
+      }
+    };
+    doSaveNew = function( e ){
+      if( isOverwrite( dd.getTime() ) ) {
+        restore( dd.getTime(), getRecord );
+        $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+      }
+    };
+    $( "#p03_btnn" ).toggleClass( "ui-state-disabled", false );
+  }
+  $( "#p03_btnu" ).click( doUpdate );
+  $( "#p03_btnn" ).click( doSaveNew );
 
-      $( "#d02_btnu" ).unbind( "click" );
-      $( "#d02_btnu" ).click( function( e ){
-        if( isOverwrite( dd.getTime() ) ) {
-          restore( dd.getTime(), getRecord );
-          deleteRecord( t );
-          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-        }
-        else {
-          $( "#d02" ).dialog( "close" );
-        }
-      } );
-    }
-    $( "#d02_btnn" ).button( "refresh" );
-  } );
-
-  $.mobile.changePage( "#d02", { role: "dialog", transition: "pop" } );
+  $( "#p03_pup1" ).popup( "open" );
+//alert("initUpdateConfirm: end");
 }
 
 function isOverwrite( t ) {
