@@ -200,23 +200,6 @@ $(document).bind("mobileinit", function(){
    <!--footer class="ui-bar" data-role="footer" data-position="fixed" data-id="footer01">
 &copy; 2013-2014 <a href="http://twitter.com/sumo_ninja_jp" target="_blank">twitter@sumo_ninja_jp</a>
    </footer><!-- /footer -->
-
-  <div data-role="popup" id="p03_pup1" data-dismissible="false" data-transition="pop" data-overlay-theme="b" >
-   <div data-role="header" >
-    <h2>Save Changes</h2>
-   </div>
-   <div data-role="content" >
-<p>To save as new record, another date or time is needed. if you choose discard changes, no changes are saved.</p>
-<div id="p03_btns" data-role="fieldcontain">
-<a href="#" data-role="button" name="p03_btnu" id ="p03_btnu" data-theme="b" data-icon="check">Save Changes</a>
-<a href="#" data-role="button" name="p03_btnn" id ="p03_btnn" data-icon="plus" data-disabled="true">Save As New Record</a>
-<a href="#" data-role="button" name="p03_btnc" id ="p03_btnc" data-icon="delete">Discard Changes</a>
-<a href="#" data-role="button" data-icon="back" data-rel="back">Cancel</a>
-</div>
-<!--a href="#p03">p03</a-->
-   </div><!-- /content -->
-  </div><!-- /popup -->
-
   </div><!-- /page -->
 
   <div data-role="page" id="p04" data-title="LOG ME v0.7">
@@ -313,21 +296,6 @@ Billiards</textarea>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="d01" data-title="LOG ME v0.7" data-close-btn="none" data-dialog="true" >
-   <header data-role="header" data-position="fixed">
-    <h2 id="d01_hdr1">Delete Record</h2>
-   </header>
-   <div data-role="content" id="d01_cont">
-<form id="d01_frm1"><!--/form-->
-<div id="d01_msg1"></div>
-<div id="d01_btns" data-role="fieldcontain">
-<input type="button" name="d01_btno" value="OK" id ="d01_btno" form="d01_frm1" data-icon="check" />
-<input type="button" name="d01_btnc" value="Cancel" id ="d01_btnc" form="d01_frm1" data-icon="delete" />
-</div>
-</form>
-   </div><!-- /content -->
-  </div><!-- /page -->
-
   <div data-role="page" id="p05" data-title="LOG ME v0.7">
    <header data-role="header" data-position="fixed" >
     <h2>About</h2>
@@ -336,7 +304,7 @@ Billiards</textarea>
    <div data-role="content" id="p05_cont" class="about">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version 0.72</h2>
+<h2 class="about">Version 0.73</h2>
 <div class="about">
 <p>
 Copyright 2013-2014 SUMO_NINJA_JP
@@ -355,6 +323,20 @@ Source code under GPL:
    </div><!-- /content -->
   </div><!-- /page -->
 
+  <div data-role="page" id="p06" data-dialog="true" data-close-btn="none" data-overlay-theme="b" >
+   <div data-role="header" >
+    <h2>Save Changes</h2>
+   </div>
+   <div data-role="content" >
+<p>To save as new record, another date or time is needed. if you choose discard changes, no changes are saved.</p>
+<div id="p03_btns" data-role="fieldcontain">
+<a href="#" data-role="button" name="p06_btnu" id ="p06_btnu" data-theme="b" data-icon="check">Save Changes</a>
+<a href="#" data-role="button" name="p06_btnn" id ="p06_btnn" data-icon="plus" data-disabled="true">Save As New Record</a>
+<a href="#" data-role="button" name="p06_btnc" id ="p06_btnc" data-icon="delete">Discard Changes</a>
+<a href="#" data-role="button" data-icon="back" data-rel="back">Cancel</a>
+</div>
+   </div><!-- /content -->
+  </div><!-- /popup -->
 
 <script type="text/javascript" src="script.js"></script>
 
