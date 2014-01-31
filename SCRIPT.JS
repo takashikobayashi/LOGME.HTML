@@ -1,6 +1,8 @@
 /* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013-2014 twitter@sumo_ninja_jp
 */
+var editRecord;
 
+(function(){
 $.event.special.swipe.horizontalDistanceThreshold = 100;
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
@@ -55,6 +57,8 @@ function initApp() {
 //alert(e.target.value);
     addToSubtitle( e.target.value, "#p03_txt3" );
   } );
+
+  editRecord = readyForEdit;
 
   $("#p02_btnc").click( clearClicked );
 
@@ -418,6 +422,7 @@ function confirmDeleteAll() {
 }
 
 function clearRecords() {
+//alert("clearRecords: begin");
   var k;
   var i = 0;
 
@@ -430,28 +435,33 @@ function clearRecords() {
       i++;
     }
   }
+//alert("clearRecords: end");
 }
 
 
 // #p03 functions
 
-function editRecord( t ) {
+function readyForEdit( t ){
+//alert("readyForEdit: begin");
   vKey.time = t;
   if( storage.getItem( JSON.stringify( vKey ) ) == null ){
     $( "#p03" ).one( "pagebeforeshow", function( e ){
       e.preventDefault();
       alert( "No data in storage." );
       $.mobile.changePage( "#p02" );
+      return false;
     } );
-    return false;
   }
-
-  $( "#p03" ).one( "pagebeforeshow", function( e ){
-    readyForEdit( t );
-  } );
+  else {
+    $( "#p03" ).one( "pagebeforeshow", function( e ){
+      loadRecord( t );
+    } );
+  }
+//alert("readyForEdit: end");
 }
 
-function readyForEdit( t ){
+function loadRecord( t ) {
+//alert("loadRecord: begin");
   var getRecord;
   var record;
   var hasPos = false;
@@ -471,7 +481,7 @@ function readyForEdit( t ){
   $( "#p03_lbl3" ).text( " [" + record.opt + "]" );
   $( "input[name='p03_rch1'][value='" + record.opt + "']" ).prop( "checked", true );
   $( "input[name='p03_rch1'][value!='" + record.opt + "']" ).prop( "checked", false );
-  $( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
+  //$( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
 
   $( "#p03_lbl4" ).text( " [" + record.sub + "]" );
   $( "#p03_txt3" ).val( record.sub );
@@ -558,6 +568,7 @@ function readyForEdit( t ){
       confirmUpdate( t, getRecord );
     }
   } );
+//alert("loadRecord: end");
 }
 
 function isSameRecord( cr, nr ) {
@@ -890,7 +901,7 @@ function confirmSaveSetting() {
 // p06 functions
 
 function confirmUpdate( t, getRecord ){
-//alert("initUpdateConfirm: begin");
+//alert("confirmUpdate: begin");
   var doUpdate, doSaveNew;
   var dd = getDateFromUI();
   var d = new Date();
@@ -934,7 +945,7 @@ function confirmUpdate( t, getRecord ){
   $( "#p06_btnn" ).click( doSaveNew );
 
   $.mobile.changePage( "#p06", { transition: "pop" } );
-//alert("initUpdateConfirm: end");
+//alert("confirmUpdate: end");
 }
 
 function isOverwrite( t ) {
@@ -1040,3 +1051,4 @@ function getMilisecondString( d ){
 function c( o ){
   alert(Object.prototype.toString.call(o));
 }
+})();
