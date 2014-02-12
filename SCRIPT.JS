@@ -1,8 +1,10 @@
 /* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013-2014 twitter@sumo_ninja_jp
 */
+
+(function( exports ){
+
 var LOGME = {};
 
-(function(){
 $.event.special.swipe.horizontalDistanceThreshold = 100;
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
@@ -29,21 +31,33 @@ function store( t, getRecord ) {
 //alert(JSON.stringify(getRecord()));
 }
 
-
 $(document).one( "pageinit", function( e ){
 //  checkUpdateReady();
-
+  initNameSpace();
   initApp();
 
   initSettingUI();
   initMainUI();
 } );
 
-function initApp() {
-//alert("initApp: begin");
-  LOGME.handler = {};
+function initNameSpace() {
+  if( typeof exports.LOGME === "undefined" ) {
+    exports.LOGME = LOGME;
+    LOGME.handler = {};
+  }
+  else {
+    LOGME = exports.LOGME;
+    if( typeof LOGME.handler === "undefined" ) {
+      LOGME.handler = {};
+    }
+  }
+
   LOGME.handler.editRecord = editRecord;
   LOGME.handler.toggleList = toggleList;
+}
+
+function initApp() {
+//alert("initApp: begin");
 
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
@@ -134,10 +148,10 @@ function initMainUI() {
 
     for( i = 0; i < elms.length; i++ ) {
       $( "#p01_btn" + i ).click( function( e ) {
-  var d = new Date();
-  var t = d.getTime();
+        var d = new Date();
+        var t = d.getTime();
 
-  recordClicked( t, e.target.value );
+        recordClicked( t, e.target.value );
       } );
     }
   }
@@ -311,6 +325,13 @@ function addToSubtitle( str, target ) {
 
 // #p02 functions
 
+/* mode
+0: 00: off, az
+1: 01: off, za
+2: 10: on, az
+3: 11: on, za
+*/
+
 function showRecords() {
   $( "#p02_record" ).empty();
   $( "#p02_record" ).append( updateList() );
@@ -333,15 +354,16 @@ function toggleList() {
 
 function updateButtons() {
   var mode = getModeValueFromUI();
+  var next = ( mode + 1 ) % 4;
 
-  if( ( mode + 1 ) % 4 >= 2 ) {
+  if( next >= 2 ) {
     $( "#p02_lblt" ).text( "On" );
   }
   else {
     $( "#p02_lblt" ).text( "Off" );
   }
 
-  if( ( ( mode + 1 ) % 4 ) % 2 == 1 ) {
+  if( next % 2 == 1 ) {
     $( "#p02_btnt" ).toggleClass( "ui-icon-carat-u", false );
     $( "#p02_btnt" ).toggleClass( "ui-icon-carat-d", true );
   }
@@ -360,6 +382,7 @@ function updateButtons() {
 }
 
 function updateList() {
+//alert("updateList: begin, mode: "+getModeValueFromUI());
   var i;
   var result = "";
   var divider = "";
@@ -417,7 +440,7 @@ function updateList() {
     result += "</ul>";
   }
 
-//alert(result);
+//alert("updateList: end, result: "+result);
 
   return result;
 }
@@ -962,7 +985,7 @@ function confirmUpdate( t, dd, getRecord ){
     doSaveNew = function( e ){
       if( isOverwrite( dd.getTime() ) ) {
         restore( dd.getTime(), getRecord );
-        initMenus();
+        updateMenus( t, getRecord().val, getRecord().sub );
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
@@ -1070,4 +1093,4 @@ function getMilisecondString( d ){
 function c( o ){
   alert(Object.prototype.toString.call(o));
 }
-})();
+})( this );
