@@ -1,13 +1,18 @@
 /* LOG ME | JavaScript, html5, jQuery and CSS3 Study | (c) 2013-2014 twitter@sumo_ninja_jp
 */
-var editRecord;
 
-(function(){
+(function( exports ){
+
+var LOGME = {};
+
 $.event.special.swipe.horizontalDistanceThreshold = 100;
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
 var storage = localStorage;
+var vals, subs;
+var settings;
 
+var appVer = "0.82";
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
@@ -29,18 +34,37 @@ function store( t, getRecord ) {
 //alert(JSON.stringify(getRecord()));
 }
 
-
 $(document).one( "pageinit", function( e ){
 //  checkUpdateReady();
-
+  initNameSpace();
   initApp();
 
+  initSettings();
   initSettingUI();
   initMainUI();
 } );
 
+function initNameSpace() {
+  if( typeof exports.LOGME === "undefined" ) {
+    exports.LOGME = LOGME;
+    LOGME.handler = {};
+  }
+  else {
+    LOGME = exports.LOGME;
+    if( typeof LOGME.handler === "undefined" ) {
+      LOGME.handler = {};
+    }
+  }
+
+  LOGME.handler.editRecord = editRecord;
+  LOGME.handler.toggleList = toggleList;
+}
+
 function initApp() {
 //alert("initApp: begin");
+
+  $( "#p05_lblv" ).text( appVer );
+
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
     addToSubtitle( e.target.value, "#p01_txt1" );
@@ -58,9 +82,13 @@ function initApp() {
     addToSubtitle( e.target.value, "#p03_txt3" );
   } );
 
-  editRecord = readyForEdit;
+  $( "#p02" ).on( "pagebeforeshow", function( e ){
+    showRecords();
+});
 
-  $("#p02_btnc").click( clearClicked );
+  $("#p02_btnc").click( function( e ) {
+    deleteAllClicked();
+  } );
 
   var cancelSubmit = function( e ){
     e.preventDefault();
@@ -109,8 +137,6 @@ function initMainUI() {
   var result = "";
   var elms;
   var val = $( idKey[0] ).val();
-  var vals, subs;
-  var obj, k, t;
 
   if( val != null && val.length > 0 ) {
     elms = toTrimedStringArray( val );
@@ -124,22 +150,11 @@ function initMainUI() {
     $( "#p01_btns" ).trigger( "create" );
 
     for( i = 0; i < elms.length; i++ ) {
-      $( "#p01_btn" + i ).click( function( e ) { 
+      $( "#p01_btn" + i ).click( function( e ) {
         var d = new Date();
         var t = d.getTime();
-        var obj;
 
         recordClicked( t, e.target.value );
-
-        vKey.time = t;
-        obj = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
-
-//alert(JSON.stringify(obj));
-        addTitleArray( t, obj.val );
-        addSubArray( t, obj.sub );
-
-        updateTitleMenu();
-        updateSubMenu();
       } );
     }
   }
@@ -158,6 +173,14 @@ function initMainUI() {
   }
   $( "#p01_chb1" ).checkboxradio( "refresh" );
 
+  initMenus();
+
+//alert("initMainUI: end");
+}
+
+function initMenus() {
+  var i;
+  var rec, k, t;
   vals = [];
   subs = [];
   for( i = 0; i < storage.length; i++ ) {
@@ -165,92 +188,100 @@ function initMainUI() {
     if( ! isKey( k ) ) {
       continue;
     }
-    obj = JSON.parse( storage.getItem( k ) );
+    rec = JSON.parse( storage.getItem( k ) );
     t = JSON.parse( k ).time;
 
-    addTitleArray( t, obj.val );
-    addSubArray( t, obj.sub );
+    addTitleArray( t, rec.val );
+    addSubArray( t, rec.sub );
   }
   updateTitleMenu();
   updateSubMenu();
+}
 
-  function addTitleArray( t, val ) {
-    var i;
-    for( i = 0; i < vals.length; i++ ) {
-      if( vals[i].val == val ) {
-        if( t > vals[i].time ) {
-          vals[i].time = t;
-        }
-        ++( vals[i].num );
-        break;
+function updateMenus( t, val, sub ) {
+  addTitleArray( t, val );
+  addSubArray( t, sub );
+
+  updateTitleMenu();
+  updateSubMenu();
+}
+
+function addTitleArray( t, val ) {
+  var i;
+  for( i = 0; i < vals.length; i++ ) {
+    if( vals[i].val == val ) {
+      if( t > vals[i].time ) {
+        vals[i].time = t;
       }
-    }
-
-    if( i >= vals.length ) {
-      vals.push( {"val":val,"time":t,"num":1} );
+      ++( vals[i].num );
+      break;
     }
   }
 
-  function addSubArray( t, sub ) {
-    var i;
-    if( sub == "" ) {
-      return;
-    }
-    for( i = 0; i < subs.length; i++ ) {
-      if( subs[i].sub == sub ) {
-        if( t > subs[i].time ) {
-          subs[i].time = t;
-        }
-        ++( subs[i].num );
-        break;
-      }
-    }
+  if( i >= vals.length ) {
+    vals.push( {"val":val,"time":t,"num":1} );
+  }
+}
 
-    if( i >= subs.length ) {
-      subs.push( {"sub":sub,"time":t,"num":1} );
+function addSubArray( t, sub ) {
+  var i;
+  if( sub == "" ) {
+    return;
+  }
+  for( i = 0; i < subs.length; i++ ) {
+    if( subs[i].sub == sub ) {
+      if( t > subs[i].time ) {
+        subs[i].time = t;
+      }
+      ++( subs[i].num );
+      break;
     }
   }
 
-  function updateTitleMenu() {
-    var i;
-    var vala = [];
+  if( i >= subs.length ) {
+    subs.push( {"sub":sub,"time":t,"num":1} );
+  }
+}
 
-    vals.sort( function( a, b ) {
-      // reverse sort z -> a
-      return b.num - a.num;
-    } );
+function updateTitleMenu() {
+  var i;
+  var vala = [];
 
-    for( i = 0; i < vals.length; i++ ) {
-      vala.push( vals[i].val );
-    }
+  vals.sort( function( a, b ) {
+    // reverse sort z -> a
+    return b.num - a.num;
+  } );
+
+  for( i = 0; i < vals.length; i++ ) {
+    vala.push( vals[i].val );
+  }
 //alert( vala + i );
-    initSelectUI( idKey[0], "#p03_sel1", vala );
+  initSelectUI( idKey[0], "#p03_sel1", vala );
+}
+
+function updateSubMenu() {
+  var i;
+  var suba = [];
+
+  subs.sort( function( a, b ) {
+    // reverse sort z -> a
+    return b.time - a.time;
+  } );
+
+  for( i = 0; i < subs.length; i++ ) {
+    suba.push( subs[i].sub );
   }
-
-  function updateSubMenu() {
-    var i;
-    var suba = [];
-
-    subs.sort( function( a, b ) {
-      // reverse sort z -> a
-      return b.time - a.time;
-    } );
-
-    for( i = 0; i < subs.length; i++ ) {
-      suba.push( subs[i].sub );
-    }
 //alert( suba + i );
 
-    initSelectUI( idKey[5], "#p01_sel1", suba );
-    initSelectUI( idKey[5], "#p03_sel2", suba );
-  }
-//alert("initMainUI: end");
+  initSelectUI( idKey[5], "#p01_sel1", suba );
+  initSelectUI( idKey[5], "#p03_sel2", suba );
 }
 
 function recordClicked( t, val ) {
   var getRecord = function() {
     return { "val":val, "opt":$( "input[name='p01_opt']:checked" ).val(), "sub":$( "input[name='p01_txt1']" ).val() };
   }
+  var obj;
 
   store( t, getRecord );
 
@@ -261,6 +292,12 @@ function recordClicked( t, val ) {
   } // end of if
 
   postRecord();
+
+  vKey.time = t;
+  obj = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+
+//alert(JSON.stringify(obj));
+  updateMenus( t, obj.val, obj.sub );
 
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
@@ -280,7 +317,6 @@ function notifyError( err ) {
 }
 
 function addToSubtitle( str, target ) {
-//alert(str);
   var sub = $( target ).val();
   if( str.length > 0 ) {
     if( sub != null && sub.length > 0 ) {
@@ -294,9 +330,12 @@ function addToSubtitle( str, target ) {
 
 // #p02 functions
 
-$( "#p02" ).on( "pagebeforeshow", function( e ){
-  showRecords();
-});
+/* mode
+0: 00: off, az
+1: 01: off, za
+2: 10: on, az
+3: 11: on, za
+*/
 
 function showRecords() {
   $( "#p02_record" ).empty();
@@ -320,15 +359,16 @@ function toggleList() {
 
 function updateButtons() {
   var mode = getModeValueFromUI();
+  var next = ( mode + 1 ) % 4;
 
-  if( ( mode + 1 ) % 4 >= 2 ) {
+  if( next >= 2 ) {
     $( "#p02_lblt" ).text( "On" );
   }
   else {
     $( "#p02_lblt" ).text( "Off" );
   }
 
-  if( ( ( mode + 1 ) % 4 ) % 2 == 1 ) {
+  if( next % 2 == 1 ) {
     $( "#p02_btnt" ).toggleClass( "ui-icon-carat-u", false );
     $( "#p02_btnt" ).toggleClass( "ui-icon-carat-d", true );
   }
@@ -347,6 +387,7 @@ function updateButtons() {
 }
 
 function updateList() {
+//alert("updateList: begin, mode: "+getModeValueFromUI());
   var i;
   var result = "";
   var divider = "";
@@ -388,7 +429,7 @@ function updateList() {
       vKey.time = k;
       v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
 
-      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + " " + v.sub + "\"><a href=\"#p03\" onClick=\"editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
+      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + " " + v.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
       if( v.opt != "None" ) {
         result += " " + v.opt;
       }
@@ -404,25 +445,25 @@ function updateList() {
     result += "</ul>";
   }
 
-//alert(result);
+//alert("updateList: end, result: "+result);
 
   return result;
 }
 
-function clearClicked( e ) {
-  confirmDeleteAll();
+function deleteAllClicked() {
+  var msg = "Are you sure, you would like to delete all records ?";
+
+  if( confirm( msg ) ){
+    deleteAllRecords();
+    showRecords();
+    initMenus();
+  }
+
   $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
 
-function confirmDeleteAll() {
-  if( confirm( "Are you sure, you would like to delete all records ?" ) ){
-    clearRecords();
-    showRecords();
-  }
-}
-
-function clearRecords() {
-//alert("clearRecords: begin");
+function deleteAllRecords() {
+//alert("deleteAllRecords: begin");
   var k;
   var i = 0;
 
@@ -435,14 +476,14 @@ function clearRecords() {
       i++;
     }
   }
-//alert("clearRecords: end");
+//alert("deleteAllRecords: end");
 }
 
 
 // #p03 functions
 
-function readyForEdit( t ){
-//alert("readyForEdit: begin");
+function editRecord( t ){
+//alert("editRecord: begin");
   vKey.time = t;
   if( storage.getItem( JSON.stringify( vKey ) ) == null ){
     $( "#p03" ).one( "pagebeforeshow", function( e ){
@@ -457,7 +498,7 @@ function readyForEdit( t ){
       loadRecord( t );
     } );
   }
-//alert("readyForEdit: end");
+//alert("editRecord: end");
 }
 
 function loadRecord( t ) {
@@ -543,7 +584,7 @@ function loadRecord( t ) {
 
   $( "#p03_btnd" ).unbind( "click" );
   $( "#p03_btnd" ).click( function( e ){
-      confirmDelete( t );
+      deleteClicked( t );
   } );
 
   getRecord = function() {
@@ -565,7 +606,7 @@ function loadRecord( t ) {
       $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
     }
     else {
-      confirmUpdate( t, getRecord );
+      confirmUpdate( t, getDateFromUI(), getRecord );
     }
   } );
 //alert("loadRecord: end");
@@ -595,6 +636,14 @@ function isSameRecord( cr, nr ) {
   );
 }
 
+function getDateFromUI(){
+  var d = new Date();
+  var str = $( "input[name='p03_txt1']" ).val();
+  d.setTime( Date.parse( str + ":00+09:00") );
+
+  return d;
+}
+
 function initSelectUI( source, target, adds ) {
   var elms, i;
   var result = "<option value=\"\" selected=\"selected\"></option>";
@@ -621,12 +670,14 @@ function initSelectUI( source, target, adds ) {
   }
 }
 
-function confirmDelete( t ) {
+function deleteClicked( t ) {
   var d = new Date();
   d.setTime( t );
+  var msg = "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?";
 
-  if( confirm( "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?" ) ) {
+  if( confirm( msg ) ) {
     deleteRecord( t );
+    initMenus();
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   }
 }
@@ -670,90 +721,122 @@ function initSettingUI() {
 //alert("initSettingUI: end");
 }
 
+function initSettings() {
+  settings = [];
+
+  var i;
+  var ids = [0, 5];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isTextChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreTextSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveTextSetting( idKey[ids[i]] );
+  }
+
+  ids = [1, 2, 3, 6, 7];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isRadioChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreRadioSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveRadioSetting( idKey[ids[i]] );
+  }
+
+  settings[4] = {};
+  settings[4].isChanged = isFlipChanged( idKey[4] );
+  settings[4].restoreSetting = restoreFlipSetting( idKey[4] );
+  settings[4].saveSetting = saveFlipSetting( idKey[4] );
+}
+
+function isTextChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( id ).val() == val ) || val == null );
+  }
+}
+
+function isRadioChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( "input[name='" + id + "']:checked" ).val() == val ) || val == null );
+  }
+}
+
+function isFlipChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( "select[name='" + id + "'] option:selected" ).val() == val ) || val == null );
+  }
+}
+
 function isSettingChanged() {
   var ret = true;
-  var i, val;
+  var i;
 
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    ret = ret && 
-    ( ( val != null && 
-        $( idKey[idx[i]] ).val() == val )
-     || val == null );
+  for( i = 0; i < settings.length; i++ ) {
+    ret = ret && settings[i].isChanged();
   }
 
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    ret = ret &&
-    ( ( val != null && 
-        $( "input[name='" + idKey[idx[i]] + "']:checked" ).val() == val )
-     || val == null );
-  }
-
-  sKey.id = idKey[4];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  ret = ret &&
-  ( ( val != null &&
-      $( "select[name='" + idKey[4] + "'] option:selected" ).val() == val )
-   || val == null );
-//alert(ret);
   return ! ret;
 }
 
-function restoreSetting() {
-  var i, val;
-
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
+function restoreTextSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
     if( val != null ) {
-      $( idKey[idx[i]] ).val( val );
+      $( id ).val( val );
     }
   }
-
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    if( val != null ) {
-      checkRadioUI( idKey[idx[i]], val );
-    }
-
-    ( function() {
-      var j = i;
-      $( "#p04" ).one( "pagebeforeshow", function( e ){
-//alert("refreshCheckbox["+j+"]: begin");
-        $( "input[name='" + idKey[idx[j]] + "']" ).checkboxradio( "refresh" );
-//alert("refreshCheckbox["+j+"]: end");
-      } );
-    } )();
-  }
-
-  sKey.id = idKey[4];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    selectSelectUI( idKey[4], val );
-  }
-
-  $( "#p04" ).one( "pagebeforeshow", function( e ){
-//alert("refreshFlip: begin");
-    $( "select[name='" + idKey[4] + "']" ).flipswitch( "refresh" );
-//alert("refreshFlip: end");
-  } );
 }
 
-function saveSetting() {
-  var i, val;
+function restoreRadioSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      checkRadioUI( id, val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( "input[name='" + id + "']" ).checkboxradio( "refresh" );
+      } );
+    }
+  }
+}
 
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = $( idKey[idx[i]] ).val();
+function restoreFlipSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      selectSelectUI( id, val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( "select[name='" + id + "']" ).flipswitch( "refresh" );
+      } );
+    }
+  }
+}
+
+function restoreSetting() {
+  var i;
+
+  for( i = 0; i < settings.length; i++ ) {
+    settings[i].restoreSetting();
+  }  
+}
+
+function saveTextSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( id ).val();
     if( val.length > 0 ) {
       storage.setItem( JSON.stringify( sKey ), val );
     }
@@ -761,17 +844,32 @@ function saveSetting() {
       storage.removeItem( JSON.stringify( sKey ) );
     }
   }
+}
 
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];  
-    val = $( "input[name='" + idKey[idx[i]] + "']:checked" ).val();
+function saveRadioSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( "input[name='" + id + "']:checked" ).val();
     storage.setItem( JSON.stringify( sKey ), val );
   }
+}
 
-  sKey.id = idKey[4];
-  val = $( "select[name='" + idKey[4] + "'] option:selected" ).val();
+function saveFlipSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( "select[name='" + id + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
+  }
+}
+
+function saveSetting() {
+  var i;
+
+  for( i = 0; i < settings.length; i++ ) {
+    settings[i].saveSetting();
+  }
 }
 
 function postRecord() {
@@ -886,13 +984,15 @@ function setModeValueToUI( mode ) {
 }
 
 function confirmSaveSetting() {
-  if( confirm( "Save and apply setting changes ? if you choose cancel, all changes are discarded." ) ) {
+  var msg = "Save and apply setting changes ? if you choose cancel, all changes are discarded.";
+
+  if( confirm( msg ) ) {
     initMainUI();
     saveSetting();
-    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+    $.mobile.changePage( "#p01", { transition: "slide" } );
   }
   else {
-    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+    $.mobile.changePage( "#p01", { transition: "slide" } );
     restoreSetting();
   }
 }
@@ -900,10 +1000,9 @@ function confirmSaveSetting() {
 
 // p06 functions
 
-function confirmUpdate( t, getRecord ){
+function confirmUpdate( t, dd, getRecord ){
 //alert("confirmUpdate: begin");
-  var doUpdate, doSaveNew;
-  var dd = getDateFromUI();
+  var doUpdate, doSaveNew, doUpdateMenus;
   var d = new Date();
   d.setTime( t );
 
@@ -918,6 +1017,7 @@ function confirmUpdate( t, getRecord ){
   if( isSameISODate( d, dd ) ){
     doUpdate = function( e ){
         restore( t, getRecord );
+        initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
     };
     doSaveNew = function( e ){
@@ -930,17 +1030,20 @@ function confirmUpdate( t, getRecord ){
       if( isOverwrite( dd.getTime() ) ){
         restore( dd.getTime(), getRecord );
         deleteRecord( t );
+        initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
     doSaveNew = function( e ){
       if( isOverwrite( dd.getTime() ) ) {
         restore( dd.getTime(), getRecord );
+        updateMenus( t, getRecord().val, getRecord().sub );
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
     $( "#p06_btnn" ).toggleClass( "ui-state-disabled", false );
   }
+
   $( "#p06_btnu" ).click( doUpdate );
   $( "#p06_btnn" ).click( doSaveNew );
 
@@ -952,8 +1055,9 @@ function isOverwrite( t ) {
   var d = new Date();
   d.setTime( t );
   vKey.time = t;
+  var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
 
-  return storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( "Record on " + getDisplayFullString( d ) + " has already existed. Over write?" ) );
+  return storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( msg ) );
 }
 
 function restore( t, getRecord ) {
@@ -962,16 +1066,6 @@ function restore( t, getRecord ) {
   if( $( "#p03_txa1" ).val().length > 0 ){
     addDescription( t, $( "#p03_txa1" ).val() );
   }
-}
-
-function getDateFromUI(){
-  var d = new Date();
-  var str = $( "input[name='p03_txt1']" ).val();
-  d.setTime( Date.parse( str + ":00+09:00") );
-
-//alert(str+", "+getDisplayDateString(d)+" "+getDisplayTimeString(d));
-
-  return d;
 }
 
 function addDescription( t, desc ){
@@ -1051,4 +1145,4 @@ function getMilisecondString( d ){
 function c( o ){
   alert(Object.prototype.toString.call(o));
 }
-})();
+})( this );
