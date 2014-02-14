@@ -9,6 +9,7 @@ $.event.special.swipe.horizontalDistanceThreshold = 100;
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
 var storage = localStorage;
+var settings = [];
 
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
@@ -36,6 +37,7 @@ $(document).one( "pageinit", function( e ){
   initNameSpace();
   initApp();
 
+  initSettings();
   initSettingUI();
   initMainUI();
 } );
@@ -133,7 +135,6 @@ function initMainUI() {
   var result = "";
   var elms;
   var val = $( idKey[0] ).val();
-  var obj, k, t;
 
   if( val != null && val.length > 0 ) {
     elms = toTrimedStringArray( val );
@@ -176,6 +177,8 @@ function initMainUI() {
 }
 
 function initMenus() {
+  var i;
+  var rec, k, t;
   vals = [];
   subs = [];
   for( i = 0; i < storage.length; i++ ) {
@@ -183,11 +186,11 @@ function initMenus() {
     if( ! isKey( k ) ) {
       continue;
     }
-    obj = JSON.parse( storage.getItem( k ) );
+    rec = JSON.parse( storage.getItem( k ) );
     t = JSON.parse( k ).time;
 
-    addTitleArray( t, obj.val );
-    addSubArray( t, obj.sub );
+    addTitleArray( t, rec.val );
+    addSubArray( t, rec.sub );
   }
   updateTitleMenu();
   updateSubMenu();
@@ -716,90 +719,120 @@ function initSettingUI() {
 //alert("initSettingUI: end");
 }
 
+function initSettings() {
+  var i;
+  var ids = [0, 5];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isTextChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreTextSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveTextSetting( idKey[ids[i]] );
+  }
+
+  ids = [1, 2, 3, 6, 7];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isRadioChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreRadioSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveRadioSetting( idKey[ids[i]] );
+  }
+
+  settings[4] = {};
+  settings[4].isChanged = isFlipChanged( idKey[4] );
+  settings[4].restoreSetting = restoreFlipSetting( idKey[4] );
+  settings[4].saveSetting = saveFlipSetting( idKey[4] );
+}
+
+function isTextChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( id ).val() == val ) || val == null );
+  }
+}
+
+function isRadioChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( "input[name='" + id + "']:checked" ).val() == val ) || val == null );
+  }
+}
+
+function isFlipChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    return ( ( val != null && $( "select[name='" + id + "'] option:selected" ).val() == val ) || val == null );
+  }
+}
+
 function isSettingChanged() {
   var ret = true;
-  var i, val;
+  var i;
 
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    ret = ret && 
-    ( ( val != null && 
-        $( idKey[idx[i]] ).val() == val )
-     || val == null );
+  for( i = 0; i < settings.length; i++ ) {
+    ret = ret && settings[i].isChanged();
   }
 
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    ret = ret &&
-    ( ( val != null && 
-        $( "input[name='" + idKey[idx[i]] + "']:checked" ).val() == val )
-     || val == null );
-  }
-
-  sKey.id = idKey[4];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  ret = ret &&
-  ( ( val != null &&
-      $( "select[name='" + idKey[4] + "'] option:selected" ).val() == val )
-   || val == null );
-//alert(ret);
   return ! ret;
 }
 
-function restoreSetting() {
-  var i, val;
-
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
+function restoreTextSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
     if( val != null ) {
-      $( idKey[idx[i]] ).val( val );
+      $( id ).val( val );
     }
   }
-
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = storage.getItem( JSON.stringify( sKey ) );
-    if( val != null ) {
-      checkRadioUI( idKey[idx[i]], val );
-    }
-
-    ( function() {
-      var j = i;
-      $( "#p04" ).one( "pagebeforeshow", function( e ){
-//alert("refreshCheckbox["+j+"]: begin");
-        $( "input[name='" + idKey[idx[j]] + "']" ).checkboxradio( "refresh" );
-//alert("refreshCheckbox["+j+"]: end");
-      } );
-    } )();
-  }
-
-  sKey.id = idKey[4];
-  val = storage.getItem( JSON.stringify( sKey ) );
-  if( val != null ) {
-    selectSelectUI( idKey[4], val );
-  }
-
-  $( "#p04" ).one( "pagebeforeshow", function( e ){
-//alert("refreshFlip: begin");
-    $( "select[name='" + idKey[4] + "']" ).flipswitch( "refresh" );
-//alert("refreshFlip: end");
-  } );
 }
 
-function saveSetting() {
-  var i, val;
+function restoreRadioSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      checkRadioUI( id, val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( "input[name='" + id + "']" ).checkboxradio( "refresh" );
+      } );
+    }
+  }
+}
 
-  var idx = [0, 5];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];
-    val = $( idKey[idx[i]] ).val();
+function restoreFlipSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      selectSelectUI( id, val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( "select[name='" + id + "']" ).flipswitch( "refresh" );
+      } );
+    }
+  }
+}
+
+function restoreSetting() {
+  var i;
+
+  for( i = 0; i < settings.length; i++ ) {
+    settings[i].restoreSetting();
+  }  
+}
+
+function saveTextSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( id ).val();
     if( val.length > 0 ) {
       storage.setItem( JSON.stringify( sKey ), val );
     }
@@ -807,17 +840,32 @@ function saveSetting() {
       storage.removeItem( JSON.stringify( sKey ) );
     }
   }
+}
 
-  idx = [1, 2, 3, 6, 7];
-  for( i = 0; i < idx.length; i++ ) {
-    sKey.id = idKey[idx[i]];  
-    val = $( "input[name='" + idKey[idx[i]] + "']:checked" ).val();
+function saveRadioSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( "input[name='" + id + "']:checked" ).val();
     storage.setItem( JSON.stringify( sKey ), val );
   }
+}
 
-  sKey.id = idKey[4];
-  val = $( "select[name='" + idKey[4] + "'] option:selected" ).val();
+function saveFlipSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( "select[name='" + id + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
+  }
+}
+
+function saveSetting() {
+  var i;
+
+  for( i = 0; i < settings.length; i++ ) {
+    settings[i].saveSetting();
+  }
 }
 
 function postRecord() {
@@ -937,10 +985,10 @@ function confirmSaveSetting() {
   if( confirm( msg ) ) {
     initMainUI();
     saveSetting();
-    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+    $.mobile.changePage( "#p01", { transition: "slide" } );
   }
   else {
-    $.mobile.changePage( "#p01", { transition: "pop", reverse: true } );
+    $.mobile.changePage( "#p01", { transition: "slide" } );
     restoreSetting();
   }
 }
