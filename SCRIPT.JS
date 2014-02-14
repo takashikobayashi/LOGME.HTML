@@ -9,8 +9,10 @@ $.event.special.swipe.horizontalDistanceThreshold = 100;
 $.event.special.swipe.verticalDistanceThreshold = 20;
 
 var storage = localStorage;
-var settings = [];
+var vals, subs;
+var settings;
 
+var appVer = "0.82";
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
@@ -60,6 +62,8 @@ function initNameSpace() {
 
 function initApp() {
 //alert("initApp: begin");
+
+  $( "#p05_lblv" ).text( appVer );
 
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
@@ -126,8 +130,6 @@ function checkUpdateReady() {
 
 
 // #p01 functions
-
-var vals, subs;
 
 function initMainUI() {
 //alert("initMainUI: begin");
@@ -720,6 +722,8 @@ function initSettingUI() {
 }
 
 function initSettings() {
+  settings = [];
+
   var i;
   var ids = [0, 5];
   for( i = 0; i < ids.length; i++ ) {
