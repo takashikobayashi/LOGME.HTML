@@ -787,7 +787,7 @@ function isSettingChanged() {
   for( i = 0; i < settings.length; i++ ) {
     ret = settings[i].isChanged();
     if( ret ) {
-      return ret;
+      break;
     }
   }
 
