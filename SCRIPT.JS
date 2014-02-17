@@ -12,7 +12,7 @@ var storage = localStorage;
 var vals, subs;
 var settings;
 
-var appVer = "0.82";
+var appVer = "0.84";
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
@@ -39,7 +39,6 @@ $(document).one( "pageinit", function( e ){
   initNameSpace();
   initApp();
 
-  initSettings();
   initSettingUI();
   initMainUI();
 } );
@@ -63,13 +62,34 @@ function initNameSpace() {
 function initApp() {
 //alert("initApp: begin");
 
-  $( "#p05_lblv" ).text( appVer );
+  // Main #1
+  $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
+    $.mobile.changePage( "#p02", { transition: "slide" } );
+  } );
 
   $( "#p01_sel1" ).change( function( e ) {
 //alert(e.target.value);
     addToSubtitle( e.target.value, "#p01_txt1" );
   } );
 
+  $( "#p01_frm1" ).submit( cancelSubmit );
+
+  // List #2
+  $( "#p02" ).on( "swiperight", "#p02_cont", function( e ) {
+    $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
+  } );
+
+  $( "#p02" ).on( "pagebeforeshow", function( e ){
+    showRecords();
+});
+
+  $("#p02_btnc").click( function( e ) {
+    deleteAllClicked();
+  } );
+
+  $( "#p02_frm1" ).submit( cancelSubmit );
+
+  // Details #3
   $( "#p03_sel1" ).change( function( e ) {
 //alert(e.target.value);
     if( e.target.value.length > 0 ) {
@@ -82,30 +102,24 @@ function initApp() {
     addToSubtitle( e.target.value, "#p03_txt3" );
   } );
 
-  $( "#p02" ).on( "pagebeforeshow", function( e ){
-    showRecords();
-});
+  $( "#p03_frm1" ).submit( cancelSubmit );
 
-  $("#p02_btnc").click( function( e ) {
-    deleteAllClicked();
+  // Setting #4
+  $( "#p04_btnb" ).click( function( e ){
+    if( isSettingChanged() ) {
+      confirmSaveSetting();
+    }
+    else {
+      $.mobile.changePage( "#p01", { transition: "slide" } );
+    }
   } );
 
-  var cancelSubmit = function( e ){
-    e.preventDefault();
-    return false;
-  }
 
-  $( "#p01_frm1" ).submit( cancelSubmit );
-  $( "#p02_frm1" ).submit( cancelSubmit );
-  $( "#p03_frm1" ).submit( cancelSubmit );
   $( "#p04_frm1" ).submit( cancelSubmit );
 
-  $( "#p02" ).on( "swiperight", "#p02_cont", function( e ) {
-    $.mobile.changePage( "#p01", { transition: "slide", reverse: true } );
-  } );
-  $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
-    $.mobile.changePage( "#p02", { transition: "slide" } );
-  } );
+  // About #5
+  $( "#p05_lblv" ).text( appVer );
+
 //alert("initApp: end");
 }
 
@@ -128,6 +142,10 @@ function checkUpdateReady() {
 //alert("checkUpdateReady: end");
 }
 
+function cancelSubmit( e ) {
+  e.preventDefault();
+  return false;
+}
 
 // #p01 functions
 
@@ -522,7 +540,7 @@ function loadRecord( t ) {
   $( "#p03_lbl3" ).text( " [" + record.opt + "]" );
   $( "input[name='p03_rch1'][value='" + record.opt + "']" ).prop( "checked", true );
   $( "input[name='p03_rch1'][value!='" + record.opt + "']" ).prop( "checked", false );
-  //$( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
+  $( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
 
   $( "#p03_lbl4" ).text( " [" + record.sub + "]" );
   $( "#p03_txt3" ).val( record.sub );
@@ -706,22 +724,6 @@ function deleteRecord( t ) {
 
 function initSettingUI() {
 //alert("initSettingUI: begin");
-  restoreSetting();
-
-  $( "#p04_btnb" ).click( function( e ){
-    if( isSettingChanged() ) {
-      confirmSaveSetting();
-    }
-    else {
-      $.mobile.changePage( "#p01", { transition: "slide" } );
-    }
-  } );
-
-  saveSetting();
-//alert("initSettingUI: end");
-}
-
-function initSettings() {
   settings = [];
 
   var i;
@@ -745,6 +747,10 @@ function initSettings() {
   settings[4].isChanged = isFlipChanged( idKey[4] );
   settings[4].restoreSetting = restoreFlipSetting( idKey[4] );
   settings[4].saveSetting = saveFlipSetting( idKey[4] );
+
+  restoreSetting();
+  saveSetting();
+//alert("initSettingUI: end");
 }
 
 function isTextChanged( id ) {
@@ -752,7 +758,7 @@ function isTextChanged( id ) {
   return function() {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
-    return ( ( val != null && $( id ).val() == val ) || val == null );
+    return ( val == null || $( id ).val() != val );
   }
 }
 
@@ -761,7 +767,7 @@ function isRadioChanged( id ) {
   return function() {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
-    return ( ( val != null && $( "input[name='" + id + "']:checked" ).val() == val ) || val == null );
+    return ( val == null || $( "input[name='" + id + "']:checked" ).val() != val );
   }
 }
 
@@ -770,19 +776,22 @@ function isFlipChanged( id ) {
   return function() {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
-    return ( ( val != null && $( "select[name='" + id + "'] option:selected" ).val() == val ) || val == null );
+    return ( val == null || $( "select[name='" + id + "'] option:selected" ).val() != val );
   }
 }
 
 function isSettingChanged() {
-  var ret = true;
+  var ret = false;
   var i;
 
   for( i = 0; i < settings.length; i++ ) {
-    ret = ret && settings[i].isChanged();
+    ret = settings[i].isChanged();
+    if( ret ) {
+      break;
+    }
   }
 
-  return ! ret;
+  return ret;
 }
 
 function restoreTextSetting( id ) {
