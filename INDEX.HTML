@@ -17,9 +17,9 @@ $(document).bind("mobileinit", function(){
 });
   </script>
 
-  <script type="text/javascript" src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+  <script type="text/javascript" src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
 
-  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" />
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />
 
   <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,700" />
 
@@ -30,15 +30,15 @@ $(document).bind("mobileinit", function(){
 
   <div data-role="page" id="p01" data-title="LOG ME v0.8">
    <header data-role="header" data-position="fixed" data-id="header01">
-    <a href="#p04" data-icon="gear" data-direction="reverse"  >Setting</a>
+    <a href="#p04" data-icon="gear" data-direction="reverse" >Setting</a>
     <h1>LOG ME</h1>
     <a href="#p02" data-icon="bars">List</a>
    </header><!-- /header -->
-   <div data-role="content" id="p01_cont">
+   <div class="ui-content" role="main" id="p01_cont">
 
 <form id="p01_frm1"><!--/form-->
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <legend class="ui-hidden-accessible" >Log Me with Title:</legend>
 <div id="p01_btns">
 <input type="button" name="p01_btn1" value="Working" id="p01_btn1" data-corners="false" form="p01_frm1"/>
@@ -49,7 +49,7 @@ $(document).bind("mobileinit", function(){
 </div> <!--end of id=p01_btns-->
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend class="ui-hidden-accessible" >Options:</legend>
 <input type="radio" value="Begin" id="p01_rch1" name="p01_opt" form="p01_frm1"/><label for="p01_rch1">Begin</label>
@@ -58,7 +58,7 @@ $(document).bind("mobileinit", function(){
 </fieldset>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p01_txt1" class="ui-hidden-accessible" >Subtitle:</label>
 <div class="ui-grid-d">
   <div class="ui-block-4">
@@ -76,7 +76,7 @@ $(document).bind("mobileinit", function(){
 </div>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p01_chb1">Record Location</label>
 <input type="checkbox" name="p01_chb1" id="p01_chb1" form="p01_frm1" />
 </div>
@@ -95,13 +95,13 @@ $(document).bind("mobileinit", function(){
     <h1>LOG ME</h1>
     <a href="#" data-icon="carat-u" onClick="LOGME.handler.toggleList()" id="p02_btnt"><span id="p02_lblt">On</span></a>
    </header><!-- /header -->
-   <div data-role="content" id="p02_cont">
+   <div class="ui-content" role="main" id="p02_cont">
 
 <div id="p02_record"></div>
 
 <form id="p02_frm1"><!--/form-->
 
-<div id="p02_btns" data-role="fieldcontain">
+<div id="p02_btns" class="ui-field-contain">
 <input type="button" name="p02_btnc" value="Delete All" id ="p02_btnc" form="p02_frm1"/>
 </div>
 
@@ -119,15 +119,15 @@ $(document).bind("mobileinit", function(){
     <h1>LOG ME</h1>
    </header><!-- /header -->
 
-   <div data-role="content" id="p03_cont">
+   <div class="ui-content" role="main" id="p03_cont">
 <form id="p03_frm1"><!--/form-->
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p03_txt1">Date Time:<span id="p03_lbl1"></span></label>
 <input type="datetime-local" placeholder="" name="p03_txt1" id="p03_txt1" value="" form="p03_frm1"/>
 <p>Second & Mili sec become 00 000, if you set another Date Time.</p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p03_txt2">Title:<span id="p03_lbl2"></span></label>
 <div class="ui-grid-d">
   <div class="ui-block-4">
@@ -149,7 +149,7 @@ $(document).bind("mobileinit", function(){
 <p>Selected string REPLACES the Title.</p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Options:<span id="p03_lbl3"></span></legend>
 <input type="radio" value="Begin" id="p03_rch11" name="p03_rch1" form="p03_frm1"/><label for="p03_rch11">Begin</label>
@@ -158,7 +158,7 @@ $(document).bind("mobileinit", function(){
 </fieldset>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p03_txt3">Subtitle:<span id="p03_lbl4"></span></label>
 <div class="ui-grid-d">
   <div class="ui-block-4">
@@ -177,7 +177,7 @@ $(document).bind("mobileinit", function(){
 <p>Selected string is ADDED to the end of the Subtitle.</p>
 </div>
 
-<div data-role="fieldcontain" id="p03_btns">
+<div class="ui-field-contain" id="p03_btns">
 <legend>Location:</legend>
 <fieldset data-role="controlgroup" data-type="horizontal">
 <input type="button" name="p03_btn0" value="New" id="p03_btn0" form="p03_frm1" data-icon="plus" />
@@ -186,12 +186,12 @@ $(document).bind("mobileinit", function(){
 <p id="p03_map1"></p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p03_txa1">Description:</label>
 <textarea name="p03_txa1" id="p03_txa1" form="p03_frm1"></textarea>
 </div>
 
-<div id="p03_btns" data-role="fieldcontain">
+<div id="p03_btns" class="ui-field-contain">
 <input type="button" name="p03_btnd" value="Delete This Record" id ="p03_btnd" form="p03_frm1" data-icon="delete" />
 </div>
 </form>
@@ -209,10 +209,10 @@ $(document).bind("mobileinit", function(){
     <a href="#" data-icon="forward" id="p04_btnb" >Back</a>
    </header><!-- /header -->
 
-   <div data-role="content" id="p04_cont">
+   <div class="ui-content" role="main" id="p04_cont">
 <form id="p04_frm1"><!--/form-->
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p04_txa1">Title Buttons and Menu Items:</label>
 <textarea name="p04_txa1" id="p04_txa1" form="p04_frm1" >Working
 Commuting
@@ -222,7 +222,7 @@ Sleeping</textarea>
 <p>Clearing the text becomes default values after reloading the app.</p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p04_txa2">Subtitle Menu Items:</label>
 <textarea name="p04_txa2" id="p04_txa2" form="p04_frm1" >Meeting
 Writing reports
@@ -235,7 +235,7 @@ Billiards</textarea>
 <p>Clearing the text becomes default values after reloading the app.</p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Clearing Subtitle:</legend>
 <input type="radio" value="always" id="p04_rch41" name="p04_rch4" form="p04_frm1" data-mini="true" /><label for="p04_rch41">Always</label>
@@ -244,7 +244,7 @@ Billiards</textarea>
 </fieldset>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Rotating Option:</legend>
 <input type="radio" value="bande" id="p04_rch51" name="p04_rch5" form="p04_frm1" data-mini="true" /><label for="p04_rch51">B and E</label>
@@ -254,7 +254,7 @@ Billiards</textarea>
 <p>B: Begin, E: End, N: None</p>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Recording Location:</legend>
 <input type="radio" value="off" id="p04_rch21" name="p04_rch2" form="p04_frm1" data-mini="true" checked="checked"/><label for="p04_rch21">Auto off</label>
@@ -263,7 +263,7 @@ Billiards</textarea>
 </fieldset>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>List Order:</legend>
 <input type="radio" value="0" id="p04_rch31" name="p04_rch3" form="p04_frm1" data-mini="true" /><label for="p04_rch31">A to Z</label>
@@ -271,7 +271,7 @@ Billiards</textarea>
 </fieldset>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <label for="p04_flp1">List Filter:</label>
 <select name="p04_flp1" id="p04_flp1" data-role="flipswitch" data-mini="true">
 <option value="0" selected>Off</option>
@@ -279,7 +279,7 @@ Billiards</textarea>
 </select>
 </div>
 
-<div data-role="fieldcontain">
+<div class="ui-field-contain">
 <fieldset data-role="controlgroup" data-type="horizontal">
 <legend>Location Zoom:</legend>
 <input type="radio" value="12" id="p04_rch11" name="p04_rch1" form="p04_frm1" data-mini="true" /><label for="p04_rch11">City</label>
@@ -301,10 +301,10 @@ Billiards</textarea>
     <h2>About</h2>
     <a href="#" data-rel="back" data-role="button" data-icon="forward" class="ui-btn-right">Back</a>
    </header>
-   <div data-role="content" id="p05_cont" class="about">
+   <div class="ui-content about" role="main" id="p05_cont">
 
 <h1 class="about">LOG ME</h1>
-<h2 class="about">Version <span id="p05_lblv" >0.82</span></h2>
+<h2 class="about">Version <span id="p05_lblv" >0.86</span></h2>
 <div class="about">
 <p>
 Copyright 2013-2014 SUMO_NINJA_JP
@@ -317,7 +317,7 @@ Source code under GPL:
 <a href="https://github.com/takashikobayashi/LOGME.HTML" target="_blank" >sumo_ninja_jp / LOGME.HTML</a>
 </p>
 </div>
-<div data-role="fieldcontain" class="about">
+<div class="ui-field-contain about">
 <!--a href="#" data-rel="back" data-role="button" data-icon="back" >Back</a-->
 </div>
    </div><!-- /content -->
@@ -327,9 +327,9 @@ Source code under GPL:
    <div data-role="header" >
     <h2>Save Changes</h2>
    </div>
-   <div data-role="content" >
+   <div class="ui-content" role="main">
 <p>To save as new record, another date or time is needed. if you choose discard changes, no changes are saved.</p>
-<div id="p03_btns" data-role="fieldcontain">
+<div id="p03_btns" class="ui-field-contain">
 <a href="#" data-role="button" name="p06_btnu" id ="p06_btnu" data-theme="b" data-icon="check">Save Changes</a>
 <a href="#" data-role="button" name="p06_btnn" id ="p06_btnn" data-icon="plus" data-disabled="true">Save As New Record</a>
 <a href="#" data-role="button" name="p06_btnc" id ="p06_btnc" data-icon="delete">Discard Changes</a>
