@@ -12,7 +12,7 @@ var storage = localStorage;
 var vals, subs;
 var settings;
 
-var appVer = "0.84";
+var appVer = "0.86";
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
@@ -34,7 +34,7 @@ function store( t, getRecord ) {
 //alert(JSON.stringify(getRecord()));
 }
 
-$(document).one( "pageinit", function( e ){
+$(document).one( "pagecreate", function( e ){
 //  checkUpdateReady();
   initNameSpace();
   initApp();
@@ -143,6 +143,7 @@ function checkUpdateReady() {
 }
 
 function cancelSubmit( e ) {
+  e.stopPropagation();
   e.preventDefault();
   return false;
 }
