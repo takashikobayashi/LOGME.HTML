@@ -12,7 +12,7 @@ var storage = localStorage;
 var vals, subs;
 var settings;
 
-var appVer = "0.86";
+var appVer = "0.87";
 var idDef = [ "lgme", "00" ];
 var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
 
