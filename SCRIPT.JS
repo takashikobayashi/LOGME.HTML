@@ -12,26 +12,75 @@ var storage = localStorage;
 var vals, subs;
 var settings;
 
-var appVer = "0.88";
-var idDef = [ "lgme", "00" ];
-var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
+var appVer = "0.9";
+
+var idSgn = "lgme";
+var idVer = [ "00", "01" ];
+
+var vKey = { "sign":idSgn, "version":idVer[0], "time":"", "isDel":false };
 
 var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5" ];
-var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
+var sKey = { "sign":idSgn, "version":idVer[0], "id":"" };
 
 
 function isKey( k ) {
-  var obj = JSON.parse( k );
+  var key = JSON.parse( k );
 
-  return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
+  var ret = ( key.sign == idSgn && idVer.indexOf( key.version ) != -1 && key.time != undefined );
+
+/*
+  if( ret && ! confirm( k ) ){
+    storage.removeItem( k );
+    return false;
+  }
+*/
+  return ret;
 }
 
-function store( t, getRecord ) {
+function createKey( t ) {
   vKey.time = t;
+  vKey.version = idVer[isCrypted()?1:0];
 
-  storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
-//alert(JSON.stringify(vKey));
-//alert(JSON.stringify(getRecord()));
+  return JSON.stringify( vKey );
+}
+
+function store( k, getRecord ) {
+  var v = JSON.stringify( getRecord() );
+  var key = JSON.parse( k );
+
+  if( key.version == idVer[1] ) {
+    v = CryptoJS.AES.encrypt( v, getPassword() );
+  }
+
+  storage.setItem( k, v );
+//alert(k);
+//alert(v);
+}
+
+function extract( k ) {
+  var ret = storage.getItem( k );
+  var key;
+
+  if( ret == null ) {
+    return ret;
+  }
+
+  key = JSON.parse( k );
+  if( key.version == idVer[1] ) {
+    ret = CryptoJS.AES.decrypt( ret, getPassword() );
+    ret = ret.toString( CryptoJS.enc.Utf8 );
+//alert(ret);
+  }
+
+  return ret;
+}
+
+function getPassword() {
+  return idSgn;
+}
+
+function isCrypted() {
+  return true;
 }
 
 $(document).one( "pagecreate", function( e ){
@@ -203,11 +252,12 @@ function initMenus() {
   vals = [];
   subs = [];
   for( i = 0; i < storage.length; i++ ) {
-    k = storage.key(i);
+    k = storage.key( i );
     if( ! isKey( k ) ) {
       continue;
     }
-    rec = JSON.parse( storage.getItem( k ) );
+    rec = JSON.parse( extract( k ) );
+
     t = JSON.parse( k ).time;
 
     addTitleArray( t, rec.val );
@@ -301,35 +351,34 @@ function recordClicked( t, val ) {
     return { "val":val, "opt":$( "input[name='p01_opt']:checked" ).val(), "sub":$( "input[name='p01_txt1']" ).val() };
   }
   var obj;
+  var k = createKey( t );
 
-  store( t, getRecord );
+  store( k, getRecord );
 
   if( $( "input[name='p01_chb1']" ).is( ":checked" ) && navigator.geolocation ) {
     navigator.geolocation.getCurrentPosition( function( pos ) {
-      addLocation( t, pos.coords.latitude, pos.coords.longitude );
+      addLocation( k, pos.coords.latitude, pos.coords.longitude );
     }, notifyError );
   } // end of if
 
   postRecord();
 
-  vKey.time = t;
-  obj = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+  obj = JSON.parse( extract( k ) );
 
 //alert(JSON.stringify(obj));
-  updateMenus( t, obj.val, obj.sub );
+  updateMenus( ( JSON.parse( k ) ).time, obj.val, obj.sub );
 
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
 
-function addLocation( t, lat, lng ) {
-  vKey.time = t;
-  var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+function addLocation( k, lat, lng ) {
+  var record = JSON.parse( extract( k ) );
 
   var getRecord = function() {
     return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":lat, "lng":lng };
   }
 
-  store( t, getRecord );
+  store( k, getRecord );
 }
 
 function notifyError( err ) {
@@ -408,65 +457,68 @@ function updateButtons() {
 function updateList() {
 //alert("updateList: begin, mode: "+getModeValueFromUI());
   var i;
-  var result = "";
+  var ret = "";
   var divider = "";
-  var keys;
-  var d = new Date(), k, v;
+  var keys, key, k;
+  var obj;
+  var d = new Date();
   var mode = getModeValueFromUI();
 
   if( storage.length > 0 ) {
     keys = [];
     for( i = 0; i < storage.length; i++ ) {
-      k = storage.key(i);
+      k = storage.key( i );
       if( isKey( k ) ) {
-        keys.push( JSON.parse( k ).time );
+        keys.push( JSON.parse( k ) );
       }
     }
-    keys.sort();
+    keys.sort( function( a, b ) {
+      return a.time - b.time;
+    } );
 
     if( mode >= 2 ) {
-      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"true\">";
+      ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"true\">";
     }
     else {
-      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"false\">";
+      ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"false\">";
     }
     divider = "";
 
     for( i = 0; i < keys.length; i++ ){
       if( mode % 2 == 1 ) {
-        k = keys[keys.length-i-1];
+        key = keys[keys.length-i-1];
       }
       else {
-        k = keys[i];
+        key = keys[i];
       }
-      d.setTime(k);
+      d.setTime( key.time );
       if( divider != getDisplayDateString( d ) ) {
         divider = getDisplayDateString( d );
-        result += "<li data-role=\"list-divider\">" + divider + "</li>";
+        ret += "<li data-role=\"list-divider\">" + divider + "</li>";
       }
 
-      vKey.time = k;
-      v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
+      k = JSON.stringify( key );
+      obj = JSON.parse( extract( k ) );
 
-      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + " " + v.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
-      if( v.opt != "None" ) {
-        result += " " + v.opt;
+      ret += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + " " + obj.val;
+      if( obj.opt != "None" ) {
+        ret += " " + obj.opt;
       }
-      if( v.sub.length > 0 ) {
-        result += " " + v.sub;
+      if( obj.sub.length > 0 ) {
+        ret += " " + obj.sub;
       }
-      if( v.lat != undefined && v.lng != undefined ) {
-        result += "<span class='ui-li-count'>!</span>";
+      if( obj.lat != undefined && obj.lng != undefined ) {
+        ret += "<span class='ui-li-count'>!</span>";
       }
-      result += "</a></li>";
+      ret += "</a></li>";
 
     }
-    result += "</ul>";
+    ret += "</ul>";
   }
 
-//alert("updateList: end, result: "+result);
+//alert("updateList: end, return: "+ret);
 
-  return result;
+  return ret;
 }
 
 function deleteAllClicked() {
@@ -487,7 +539,7 @@ function deleteAllRecords() {
   var i = 0;
 
   while( storage.length > i ) {
-    k = storage.key(i);
+    k = storage.key( i );
     if( isKey( k ) ) {
       storage.removeItem( k );
     }
@@ -501,10 +553,13 @@ function deleteAllRecords() {
 
 // #p03 functions
 
-function editRecord( t ){
+function editRecord( t, v ){
 //alert("editRecord: begin");
+
   vKey.time = t;
-  if( storage.getItem( JSON.stringify( vKey ) ) == null ){
+  vKey.version = v;
+  var k = JSON.stringify( vKey );
+  if( storage.getItem( k ) == null ){
     $( "#p03" ).one( "pagebeforeshow", function( e ){
       e.preventDefault();
       alert( "No data in storage." );
@@ -514,46 +569,46 @@ function editRecord( t ){
   }
   else {
     $( "#p03" ).one( "pagebeforeshow", function( e ){
-      loadRecord( t );
+      loadRecord( k );
     } );
   }
 //alert("editRecord: end");
 }
 
-function loadRecord( t ) {
+function loadRecord( k ) {
 //alert("loadRecord: begin");
   var getRecord;
-  var record;
+  var obj;
   var hasPos = false;
   var lat, lng;
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
 
   $( "#p03_lbl1" ).text( " [" + getDisplayFullString( d ) + "]" );
   $( "#p03_txt1" ).val( getISODateString( d ) );
 
-  vKey.time = t;
-  record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+  obj = JSON.parse( extract( k ) );
 
-  $( "#p03_lbl2" ).text( " [" + record.val + "]" );
-  $( "#p03_txt2" ).val( record.val );
+  $( "#p03_lbl2" ).text( " [" + obj.val + "]" );
+  $( "#p03_txt2" ).val( obj.val );
 
-  $( "#p03_lbl3" ).text( " [" + record.opt + "]" );
-  $( "input[name='p03_rch1'][value='" + record.opt + "']" ).prop( "checked", true );
-  $( "input[name='p03_rch1'][value!='" + record.opt + "']" ).prop( "checked", false );
+  $( "#p03_lbl3" ).text( " [" + obj.opt + "]" );
+  $( "input[name='p03_rch1'][value='" + obj.opt + "']" ).prop( "checked", true );
+  $( "input[name='p03_rch1'][value!='" + obj.opt + "']" ).prop( "checked", false );
   $( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
 
-  $( "#p03_lbl4" ).text( " [" + record.sub + "]" );
-  $( "#p03_txt3" ).val( record.sub );
+  $( "#p03_lbl4" ).text( " [" + obj.sub + "]" );
+  $( "#p03_txt3" ).val( obj.sub );
 
   $( "#p03_map1" ).empty();
-  if( record.lat == undefined || record.lng == undefined ) {
+  if( obj.lat == undefined || obj.lng == undefined ) {
     $( "#p03_btn1" ).button( "disable" );
   }
   else {
     hasPos = true;
-    lat = record.lat;
-    lng = record.lng;
+    lat = obj.lat;
+    lng = obj.lng;
 
     $( "#p03_btn1" ).button( "enable" );
     $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng, getZoomValueFromUI() ) );
@@ -579,8 +634,8 @@ function loadRecord( t ) {
     $("#p03_btns .ui-btn-active").toggleClass("ui-btn-active");
   } ); // end of click
 
-  if( record.dsc != undefined ){
-    $( "#p03_txa1" ).val( record.dsc );
+  if( obj.dsc != undefined ){
+    $( "#p03_txa1" ).val( obj.dsc );
   }
   else {
     $( "#p03_txa1" ).val( "" );
@@ -603,7 +658,7 @@ function loadRecord( t ) {
 
   $( "#p03_btnd" ).unbind( "click" );
   $( "#p03_btnd" ).click( function( e ){
-      deleteClicked( t );
+      deleteClicked( k );
   } );
 
   getRecord = function() {
@@ -621,11 +676,11 @@ function loadRecord( t ) {
 
   $( "#p03_btn2" ).unbind( "click" );
   $( "#p03_btn2" ).click( function( e ){
-    if( isSameISODate( d, getDateFromUI() ) && isSameRecord( record, getRecord() ) ) {
+    if( isSameISODate( d, getDateFromUI() ) && isSameRecord( obj, getRecord() ) ) {
       $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
     }
     else {
-      confirmUpdate( t, getDateFromUI(), getRecord );
+      confirmUpdate( k, getDateFromUI(), getRecord );
     }
   } );
 //alert("loadRecord: end");
@@ -689,21 +744,20 @@ function initSelectUI( source, target, adds ) {
   }
 }
 
-function deleteClicked( t ) {
+function deleteClicked( k ) {
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
   var msg = "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?";
 
   if( confirm( msg ) ) {
-    deleteRecord( t );
+    deleteRecord( k );
     initMenus();
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   }
 }
 
-function deleteRecord( t ) {
-  vKey.time = t;
-  var k = JSON.stringify( vKey );
+function deleteRecord( k ) {
   if( isKey( k ) ) {
     storage.removeItem( k );
   }
@@ -1010,11 +1064,12 @@ function confirmSaveSetting() {
 
 // p06 functions
 
-function confirmUpdate( t, dd, getRecord ){
+function confirmUpdate( k, dd, getRecord ){
 //alert("confirmUpdate: begin");
-  var doUpdate, doSaveNew, doUpdateMenus;
+  var doUpdate, doSaveNew;
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
 
   $( "#p06_btnc" ).unbind( "click" );
   $( "#p06_btnc" ).click( function( e ){
@@ -1026,8 +1081,8 @@ function confirmUpdate( t, dd, getRecord ){
 
   if( isSameISODate( d, dd ) ){
     doUpdate = function( e ){
-        restore( t, getRecord );
-        initMenus();
+      restore( k, getRecord );
+      initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
     };
     doSaveNew = function( e ){
@@ -1036,18 +1091,39 @@ function confirmUpdate( t, dd, getRecord ){
     $( "#p06_btnn" ).toggleClass( "ui-state-disabled", true );
   }
   else {
-    doUpdate = function( e ) {
-      if( isOverwrite( dd.getTime() ) ){
-        restore( dd.getTime(), getRecord );
-        deleteRecord( t );
+    doUpdate = function( e ){
+      var kk = getKey( dd.getTime() );
+//alert("update:"+kk);
+      if( kk != null ) {
+        if( confirm( "Record on " + getDisplayFullString( dd ) + " has already existed. Over write?" ) ) {
+          deleteRecord( kk );
+          restore( createKey( dd.getTime() ), getRecord );
+          deleteRecord( k );
+          initMenus();
+          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+        }
+      }
+      else {
+        restore( createKey( dd.getTime() ), getRecord );
+        deleteRecord( k );
         initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
     doSaveNew = function( e ){
-      if( isOverwrite( dd.getTime() ) ) {
-        restore( dd.getTime(), getRecord );
-        updateMenus( t, getRecord().val, getRecord().sub );
+      var kk = getKey( dd.getTime() );
+//alert("save as new:"+kk);
+      if( kk != null ) {
+        if( confirm( "Record on " + getDisplayFullString( dd ) + " has already existed. Over write?" ) ) {
+          deleteRecord( kk );
+          restore( createKey( dd.getTime() ), getRecord );
+          initMenus();
+          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+        }
+      }
+      else {
+        restore( createKey( dd.getTime() ), getRecord );
+        initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
@@ -1061,39 +1137,51 @@ function confirmUpdate( t, dd, getRecord ){
 //alert("confirmUpdate: end");
 }
 
-function isOverwrite( t ) {
-  var d = new Date();
-  d.setTime( t );
+function getKey( t ) {
+//alert("getkey: begin");
+  var i, k = null, v = null;
   vKey.time = t;
-  var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
-
-  return storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( msg ) );
-}
-
-function restore( t, getRecord ) {
-  store( t, getRecord );
-
-  if( $( "#p03_txa1" ).val().length > 0 ){
-    addDescription( t, $( "#p03_txa1" ).val() );
-  }
-}
-
-function addDescription( t, desc ){
-  vKey.time = t;
-  var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
-
-//alert("before: "+JSON.stringify(record));
-
-  var getRecord = function() {
-    if( record.lat == undefined || record.lng == undefined ) {
-      return { "val":record.val, "opt":record.opt, "sub":record.sub, "dsc":desc };
+  for( i = 0; i < idVer.length; i++ ) {
+    vKey.version = idVer[i];
+    k = JSON.stringify( vKey );
+    v = storage.getItem( k );
+    if( v != null ) {
+      break;
     }
     else {
-      return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":record.lat, "lng":record.lng, "dsc":desc };
+      k = null;
+      v = null;
+    }
+  }
+  return k;
+}
+
+/*
+  var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
+
+*/
+
+
+function restore( k, getRecord ) {
+  store( k, getRecord );
+
+  if( $( "#p03_txa1" ).val().length > 0 ){
+    addDescription( k, $( "#p03_txa1" ).val() );
+  }
+}
+
+function addDescription( k, desc ){
+  var obj = JSON.parse( extract( k ) );
+  var getRecord = function() {
+    if( obj.lat == undefined || obj.lng == undefined ) {
+      return { "val":obj.val, "opt":obj.opt, "sub":obj.sub, "dsc":desc };
+    }
+    else {
+      return { "val":obj.val, "opt":obj.opt, "sub":obj.sub, "lat":obj.lat, "lng":obj.lng, "dsc":desc };
     }
   }
 
-  store( t, getRecord );
+  store( k, getRecord );
 }
 
 
