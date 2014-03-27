@@ -11,8 +11,9 @@ $.event.special.swipe.verticalDistanceThreshold = 20;
 var storage = localStorage;
 var vals, subs;
 var settings;
+var getPassword;
 
-var appVer = "0.9";
+var appVer = "0.91";
 
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
@@ -25,7 +26,6 @@ var sKey = { "sign":idSgn, "version":idVer[0], "id":"" };
 
 function isKey( k ) {
   var key = JSON.parse( k );
-
   var ret = ( key.sign == idSgn && idVer.indexOf( key.version ) != -1 && key.time != undefined );
 
 /*
@@ -39,7 +39,7 @@ function isKey( k ) {
 
 function createKey( t ) {
   vKey.time = t;
-  vKey.version = idVer[isCrypted()?1:0];
+  vKey.version = idVer[isCrypting()?1:0];
 
   return JSON.stringify( vKey );
 }
@@ -47,9 +47,12 @@ function createKey( t ) {
 function store( k, getRecord ) {
   var v = JSON.stringify( getRecord() );
   var key = JSON.parse( k );
+  var val;
 
   if( key.version == idVer[1] ) {
     v = CryptoJS.AES.encrypt( v, getPassword() );
+    val = {"val":v.toString(),"slt":v.salt.toString(),"hsh":getHash( getPassword() + v.salt.toString() )};
+    v = JSON.stringify( val );
   }
 
   storage.setItem( k, v );
@@ -58,28 +61,46 @@ function store( k, getRecord ) {
 }
 
 function extract( k ) {
-  var ret = storage.getItem( k );
-  var key;
+  var v = storage.getItem( k );
+  var key, obj, h;
+  var p = getPassword();
 
-  if( ret == null ) {
-    return ret;
+  if( v == null ) {
+    return v;
   }
 
   key = JSON.parse( k );
-  if( key.version == idVer[1] ) {
-    ret = CryptoJS.AES.decrypt( ret, getPassword() );
-    ret = ret.toString( CryptoJS.enc.Utf8 );
-//alert(ret);
+  if( key.version === idVer[1] ) {
+    obj = JSON.parse( v );
+    h = getHash( p + obj.slt );
+
+    if( h === obj.hsh ) {
+
+      v = CryptoJS.AES.decrypt( obj.val, p );
+      if( v != null){
+        v = v.toString( CryptoJS.enc.Utf8 );
+      }
+    }
+    else {
+      v = null;
+    }
   }
 
-  return ret;
+  return v;
 }
 
-function getPassword() {
-  return idSgn;
+function getMasterPassword() {
+  //return idSgn;
+  return "1234"
 }
 
-function isCrypted() {
+function getHash( src ) {
+  var hash = CryptoJS.SHA3( src, {outputLength:512} );
+  return hash.toString();
+}
+
+function isCrypting() {
+  //return false;
   return true;
 }
 
@@ -105,11 +126,14 @@ function initNameSpace() {
   }
 
   LOGME.handler.editRecord = editRecord;
+  LOGME.handler.decryptRecord = decryptRecord;
   LOGME.handler.toggleList = toggleList;
 }
 
 function initApp() {
 //alert("initApp: begin");
+
+  getPassword = getMasterPassword;
 
   // Main #1
   $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
@@ -247,8 +271,9 @@ function initMainUI() {
 }
 
 function initMenus() {
+//alert("initMenus: begin");
   var i;
-  var rec, k, t;
+  var obj, k, t;
   vals = [];
   subs = [];
   for( i = 0; i < storage.length; i++ ) {
@@ -256,15 +281,20 @@ function initMenus() {
     if( ! isKey( k ) ) {
       continue;
     }
-    rec = JSON.parse( extract( k ) );
+    obj = JSON.parse( extract( k ) );
+    if( obj == null ) {
+      continue;
+    }
 
     t = JSON.parse( k ).time;
 
-    addTitleArray( t, rec.val );
-    addSubArray( t, rec.sub );
+    addTitleArray( t, obj.val );
+    addSubArray( t, obj.sub );
   }
   updateTitleMenu();
   updateSubMenu();
+
+//alert("initMenus: end");
 }
 
 function updateMenus( t, val, sub ) {
@@ -500,18 +530,22 @@ function updateList() {
       k = JSON.stringify( key );
       obj = JSON.parse( extract( k ) );
 
-      ret += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + " " + obj.val;
-      if( obj.opt != "None" ) {
-        ret += " " + obj.opt;
+      if( obj == null ) {
+        ret += "<li data-filtertext='" + divider + " " + getDisplayTimeString( d ) + "'><a href='#p03' onClick=\"LOGME.handler.decryptRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + "<span class='ui-li-count'>?</span>";
       }
-      if( obj.sub.length > 0 ) {
-        ret += " " + obj.sub;
-      }
-      if( obj.lat != undefined && obj.lng != undefined ) {
-        ret += "<span class='ui-li-count'>!</span>";
-      }
+      else {
+        ret += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + " " + obj.val;
+        if( obj.opt != "None" ) {
+          ret += " " + obj.opt;
+        }
+        if( obj.sub.length > 0 ) {
+          ret += " " + obj.sub;
+        }
+        if( obj.lat != undefined && obj.lng != undefined ) {
+          ret += "<span class='ui-li-count'>!</span>";
+        }
+      } // end of else
       ret += "</a></li>";
-
     }
     ret += "</ul>";
   }
@@ -536,22 +570,51 @@ function deleteAllClicked() {
 function deleteAllRecords() {
 //alert("deleteAllRecords: begin");
   var k;
-  var i = 0;
+  var ks = [];
+  var i;
 
-  while( storage.length > i ) {
+  for( i = 0; i < storage.length; i++ ) {
     k = storage.key( i );
     if( isKey( k ) ) {
-      storage.removeItem( k );
+      ks.push( k );
     }
-    else {
-      i++;
-    }
+  }
+  for( i = 0; i < ks.length; i++ ) {
+    storage.removeItem( ks[ i ] );
   }
 //alert("deleteAllRecords: end");
 }
 
 
 // #p03 functions
+
+function decryptRecord( t, v ){
+alert("decryptRecord: begin");
+  msg = "Can not decrypt the record by master password. Enter another password.";
+  vKey.time = t;
+  vKey.version = v;
+  var k = JSON.stringify( vKey );
+
+  var p = prompt( msg );
+  if( p == null || p.length == 0 ) {
+    $( "#p03" ).one( "pagebeforeshow", function( e ){
+      e.preventDefault();
+      alert( msg );
+      $.mobile.changePage( "#p02" );
+      return false;
+    } );
+  }
+  else {
+    $( "#p03" ).one( "pagebeforeshow", function( e ){
+      getPassword = function() {
+        return p;
+      }
+      loadRecord( k );
+      getPassword = getMasterPassword;
+    } );
+  }
+alert("decryptRecord: end");
+}
 
 function editRecord( t, v ){
 //alert("editRecord: begin");
@@ -1081,7 +1144,8 @@ function confirmUpdate( k, dd, getRecord ){
 
   if( isSameISODate( d, dd ) ){
     doUpdate = function( e ){
-      restore( k, getRecord );
+      cleanupRecords( key.time );
+      restore( createKey( key.time ), getRecord );
       initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
     };
@@ -1092,36 +1156,15 @@ function confirmUpdate( k, dd, getRecord ){
   }
   else {
     doUpdate = function( e ){
-      var kk = getKey( dd.getTime() );
-//alert("update:"+kk);
-      if( kk != null ) {
-        if( confirm( "Record on " + getDisplayFullString( dd ) + " has already existed. Over write?" ) ) {
-          deleteRecord( kk );
-          restore( createKey( dd.getTime() ), getRecord );
-          deleteRecord( k );
-          initMenus();
-          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-        }
-      }
-      else {
+      if( isOverwrite( dd ) ) {
         restore( createKey( dd.getTime() ), getRecord );
-        deleteRecord( k );
+        cleanupRecords( key.time );
         initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
     doSaveNew = function( e ){
-      var kk = getKey( dd.getTime() );
-//alert("save as new:"+kk);
-      if( kk != null ) {
-        if( confirm( "Record on " + getDisplayFullString( dd ) + " has already existed. Over write?" ) ) {
-          deleteRecord( kk );
-          restore( createKey( dd.getTime() ), getRecord );
-          initMenus();
-          $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
-        }
-      }
-      else {
+      if( isOverwrite( dd ) ) {
         restore( createKey( dd.getTime() ), getRecord );
         initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
@@ -1137,30 +1180,56 @@ function confirmUpdate( k, dd, getRecord ){
 //alert("confirmUpdate: end");
 }
 
-function getKey( t ) {
-//alert("getkey: begin");
+function getExistingKeys( t ) {
+//alert("getExistingKeys: begin");
   var i, k = null, v = null;
+  var ret = [];
+
   vKey.time = t;
   for( i = 0; i < idVer.length; i++ ) {
     vKey.version = idVer[i];
     k = JSON.stringify( vKey );
     v = storage.getItem( k );
     if( v != null ) {
-      break;
+      ret.push( k );
     }
     else {
-      k = null;
       v = null;
     }
   }
-  return k;
+//alert("getExistingKeys: end: "+ ret);
+  return ret.length==0?null:ret;
 }
 
-/*
+function cleanupRecords( t ) {
+  var i, ks = getExistingKeys( t );
+  if( ks == null ) {
+    return;
+  }
+
+  for( i = 0; i < ks.length; i++ ) {
+    deleteRecord( ks[i] );
+  }
+}
+
+function isOverwrite( d ) {
   var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
+  var ret = false;
+  var i, ks = getExistingKeys( d.getTime() );
 
-*/
+  if( ks == null ) {
+    return true;
+  }
 
+  ret = confirm( msg );
+  if( ret ) {
+    for( i = 0; i < ks.length; i++ ) {
+      deleteRecord( ks[i] );
+    }
+  }
+
+  return ret;
+}
 
 function restore( k, getRecord ) {
   store( k, getRecord );
