@@ -13,7 +13,7 @@ var vals, subs;
 var settings;
 var getPassword;
 
-var appVer = "0.92";
+var appVer = "0.93";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
@@ -48,10 +48,11 @@ function store( k, getRecord ) {
   var v = JSON.stringify( getRecord() );
   var key = JSON.parse( k );
   var val;
+  var p = getPassword();
 
   if( key.version == idVer[1] ) {
-    v = CryptoJS.AES.encrypt( v, getPassword() );
-    val = {"val":v.toString(),"slt":v.salt.toString(),"hsh":getHash( getPassword() + v.salt.toString() )};
+    v = CryptoJS.AES.encrypt( v, p );
+    val = {"val":v.toString(),"slt":v.salt.toString(),"hsh":getHash( p + v.salt.toString() )};
     v = JSON.stringify( val );
   }
 
@@ -600,9 +601,16 @@ function decryptRecord( t, v ){
   vKey.time = t;
   vKey.version = v;
   var k = JSON.stringify( vKey );
-
+  var obj = JSON.parse( storage.getItem( k ) );
   var p = prompt( msg );
-  if( p == null || p.length == 0 ) {
+
+  if( p == null || p.length <= 0 || ( function() { 
+    var ret = ( obj.hsh !== getHash( p + obj.slt ) );
+    if( ret ) {
+      alert( "Wrong password." );
+    }
+    return ret;
+  } )() ) {
     $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
       e.stopPropagation();
       e.preventDefault();
@@ -629,7 +637,10 @@ function editRecord( t, v ){
   vKey.version = v;
   var k = JSON.stringify( vKey );
   if( storage.getItem( k ) == null ){
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
+    //$( "#p03" ).one( "pagebeforeshow", function( e ){
+
+    $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
+      e.stopPropagation();
       e.preventDefault();
       alert( "No data in storage." );
       $.mobile.changePage( "#p02" );
@@ -637,7 +648,9 @@ function editRecord( t, v ){
     } );
   }
   else {
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
+    //$( "#p03" ).one( "pagebeforeshow", function( e ){
+
+    $( "body" ).one( "pagecontainerbeforeshow", function( e, ui ){
       loadRecord( k );
     } );
   }
