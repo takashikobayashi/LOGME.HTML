@@ -13,8 +13,8 @@ var vals, subs;
 var settings;
 var getPassword;
 
-var appVer = "0.91";
-
+var appVer = "0.92";
+var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
 
@@ -90,12 +90,12 @@ function extract( k ) {
 }
 
 function getMasterPassword() {
-  //return idSgn;
-  return "1234"
+  return idSgn;
+  //return "1234"
 }
 
 function getHash( src ) {
-  var hash = CryptoJS.SHA3( src, {outputLength:512} );
+  var hash = CryptoJS.SHA3( src, hashOp );
   return hash.toString();
 }
 
@@ -489,69 +489,75 @@ function updateList() {
   var i;
   var ret = "";
   var divider = "";
+  var fltrTxt, funcName, dispStr;
   var keys, key, k;
   var obj;
   var d = new Date();
   var mode = getModeValueFromUI();
 
-  if( storage.length > 0 ) {
-    keys = [];
-    for( i = 0; i < storage.length; i++ ) {
-      k = storage.key( i );
-      if( isKey( k ) ) {
-        keys.push( JSON.parse( k ) );
-      }
-    }
-    keys.sort( function( a, b ) {
-      return a.time - b.time;
-    } );
-
-    if( mode >= 2 ) {
-      ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"true\">";
-    }
-    else {
-      ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"false\">";
-    }
-    divider = "";
-
-    for( i = 0; i < keys.length; i++ ){
-      if( mode % 2 == 1 ) {
-        key = keys[keys.length-i-1];
-      }
-      else {
-        key = keys[i];
-      }
-      d.setTime( key.time );
-      if( divider != getDisplayDateString( d ) ) {
-        divider = getDisplayDateString( d );
-        ret += "<li data-role=\"list-divider\">" + divider + "</li>";
-      }
-
-      k = JSON.stringify( key );
-      obj = JSON.parse( extract( k ) );
-
-      if( obj == null ) {
-        ret += "<li data-filtertext='" + divider + " " + getDisplayTimeString( d ) + "'><a href='#p03' onClick=\"LOGME.handler.decryptRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + "<span class='ui-li-count'>?</span>";
-      }
-      else {
-        ret += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + key.time + ",'" + key.version + "')\">" + getDisplayTimeString( d ) + " " + obj.val;
-        if( obj.opt != "None" ) {
-          ret += " " + obj.opt;
-        }
-        if( obj.sub.length > 0 ) {
-          ret += " " + obj.sub;
-        }
-        if( obj.lat != undefined && obj.lng != undefined ) {
-          ret += "<span class='ui-li-count'>!</span>";
-        }
-      } // end of else
-      ret += "</a></li>";
-    }
-    ret += "</ul>";
+  if( storage.length <= 0 ) {
+    return ret;
   }
 
-//alert("updateList: end, return: "+ret);
+  keys = [];
+  for( i = 0; i < storage.length; i++ ) {
+    k = storage.key( i );
+    if( isKey( k ) ) {
+      keys.push( JSON.parse( k ) );
+    }
+  }
+  keys.sort( function( a, b ) {
+    return a.time - b.time;
+  } );
 
+  ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"" + (mode >= 2) + "\">";
+  divider = "";
+
+  for( i = 0; i < keys.length; i++ ){
+    if( mode % 2 == 1 ) {
+      key = keys[keys.length-i-1];
+    }
+    else {
+      key = keys[i];
+    }
+
+    d.setTime( key.time );
+    if( divider != getDisplayDateString( d ) ) {
+      divider = getDisplayDateString( d );
+      ret += "<li data-role=\"list-divider\">" + divider + "</li>";
+    }
+
+    k = JSON.stringify( key );
+    obj = JSON.parse( extract( k ) );
+
+    if( obj == null ) {
+      fltrTxt = divider + " " + getDisplayTimeString( d );
+      funcName = "decryptRecord";
+      dispStr = getDisplayTimeString( d ) + "<span class='ui-li-count'>?</span>";
+    }
+    else {
+      fltrTxt = divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub;
+      funcName = "editRecord";
+      dispStr = getDisplayTimeString( d ) + " " + obj.val;
+    }
+    ret += "<li data-filtertext='" + fltrTxt + "'><a href='#p03' onClick=\"LOGME.handler." + funcName + "(" + key.time + ",'" + key.version + "')\">" + dispStr;
+
+    if( obj != null ) {
+      if( obj.opt != "None" ) {
+        ret += " " + obj.opt;
+      }
+      if( obj.sub.length > 0 ) {
+        ret += " " + obj.sub;
+      }
+      if( obj.lat != undefined && obj.lng != undefined ) {
+        ret += "<span class='ui-li-count'>!</span>";
+      }
+    }
+    ret += "</a></li>";
+  }
+  ret += "</ul>";
+
+//alert("updateList: end, return: "+ret);
   return ret;
 }
 
@@ -589,7 +595,7 @@ function deleteAllRecords() {
 // #p03 functions
 
 function decryptRecord( t, v ){
-alert("decryptRecord: begin");
+//alert("decryptRecord: begin");
   msg = "Can not decrypt the record by master password. Enter another password.";
   vKey.time = t;
   vKey.version = v;
@@ -597,15 +603,15 @@ alert("decryptRecord: begin");
 
   var p = prompt( msg );
   if( p == null || p.length == 0 ) {
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
+    $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
+      e.stopPropagation();
       e.preventDefault();
-      alert( msg );
       $.mobile.changePage( "#p02" );
       return false;
     } );
   }
   else {
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
+    $( "body" ).one( "pagecontainerbeforeshow", function( e, ui ){
       getPassword = function() {
         return p;
       }
@@ -613,7 +619,7 @@ alert("decryptRecord: begin");
       getPassword = getMasterPassword;
     } );
   }
-alert("decryptRecord: end");
+//alert("decryptRecord: end");
 }
 
 function editRecord( t, v ){
@@ -1147,7 +1153,7 @@ function confirmUpdate( k, dd, getRecord ){
       cleanupRecords( key.time );
       restore( createKey( key.time ), getRecord );
       initMenus();
-        $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+      $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
     };
     doSaveNew = function( e ){
       alert( "Date or time must be changed." );
