@@ -13,14 +13,14 @@ var vals, subs;
 var settings;
 var getPassword;
 
-var appVer = "0.93";
+var appVer = "0.94";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
 
 var vKey = { "sign":idSgn, "version":idVer[0], "time":"", "isDel":false };
 
-var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5" ];
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5", "#p04_chb1", "#p04_chb2" ];
 var sKey = { "sign":idSgn, "version":idVer[0], "id":"" };
 
 
@@ -39,7 +39,7 @@ function isKey( k ) {
 
 function createKey( t ) {
   vKey.time = t;
-  vKey.version = idVer[isCrypting()?1:0];
+  vKey.version = idVer[isEncrypting()?1:0];
 
   return JSON.stringify( vKey );
 }
@@ -48,9 +48,10 @@ function store( k, getRecord ) {
   var v = JSON.stringify( getRecord() );
   var key = JSON.parse( k );
   var val;
-  var p = getPassword();
+  var p;
 
-  if( key.version == idVer[1] ) {
+  if( key.version == idVer[1] && isEncrypting() ) {
+    p = getPassword();
     v = CryptoJS.AES.encrypt( v, p );
     val = {"val":v.toString(),"slt":v.salt.toString(),"hsh":getHash( p + v.salt.toString() )};
     v = JSON.stringify( val );
@@ -64,7 +65,7 @@ function store( k, getRecord ) {
 function extract( k ) {
   var v = storage.getItem( k );
   var key, obj, h;
-  var p = getPassword();
+  var p;
 
   if( v == null ) {
     return v;
@@ -72,37 +73,32 @@ function extract( k ) {
 
   key = JSON.parse( k );
   if( key.version === idVer[1] ) {
-    obj = JSON.parse( v );
-    h = getHash( p + obj.slt );
-
-    if( h === obj.hsh ) {
-
-      v = CryptoJS.AES.decrypt( obj.val, p );
-      if( v != null){
-        v = v.toString( CryptoJS.enc.Utf8 );
-      }
+    if( ! isDecrypting() ) {
+      v = null;
     }
     else {
-      v = null;
+      obj = JSON.parse( v );
+      p = getPassword();
+      h = getHash( p + obj.slt );
+
+      if( h === obj.hsh ) {
+        v = CryptoJS.AES.decrypt( obj.val, p );
+        if( v != null){
+          v = v.toString( CryptoJS.enc.Utf8 );
+        }
+      }
+      else {
+        v = null;
+      }
     }
   }
 
   return v;
 }
 
-function getMasterPassword() {
-  return idSgn;
-  //return "1234"
-}
-
 function getHash( src ) {
   var hash = CryptoJS.SHA3( src, hashOp );
   return hash.toString();
-}
-
-function isCrypting() {
-  //return false;
-  return true;
 }
 
 $(document).one( "pagecreate", function( e ){
@@ -187,7 +183,6 @@ function initApp() {
       $.mobile.changePage( "#p01", { transition: "slide" } );
     }
   } );
-
 
   $( "#p04_frm1" ).submit( cancelSubmit );
 
@@ -637,8 +632,6 @@ function editRecord( t, v ){
   vKey.version = v;
   var k = JSON.stringify( vKey );
   if( storage.getItem( k ) == null ){
-    //$( "#p03" ).one( "pagebeforeshow", function( e ){
-
     $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
       e.stopPropagation();
       e.preventDefault();
@@ -648,8 +641,6 @@ function editRecord( t, v ){
     } );
   }
   else {
-    //$( "#p03" ).one( "pagebeforeshow", function( e ){
-
     $( "body" ).one( "pagecontainerbeforeshow", function( e, ui ){
       loadRecord( k );
     } );
@@ -857,6 +848,8 @@ function deleteRecord( k ) {
 5: #p04_txa2
 6: p04_rch4
 7: p04_rch5
+8: #p04_chb1
+9: #p04_chb2
 */
 
 function initSettingUI() {
@@ -885,9 +878,63 @@ function initSettingUI() {
   settings[4].restoreSetting = restoreFlipSetting( idKey[4] );
   settings[4].saveSetting = saveFlipSetting( idKey[4] );
 
+  ids = [8, 9];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isCheckChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreCheckSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveCheckSetting( idKey[ids[i]] );
+  }
+
   restoreSetting();
   saveSetting();
+
+  setMasterPassword();
+
 //alert("initSettingUI: end");
+}
+
+function setMasterPassword() {
+  var msg = "Enter master password to ";
+  var f = false;
+
+  if( $( "#p04_chb1" ).prop( "checked" ) ) {
+    msg = msg + "decryption";
+    f = true;
+    if( $( "#p04_chb2" ).prop( "checked" ) ) {
+      msg = msg + " and encryption.";
+    }
+    else {
+      msg = msg + ".";
+    }
+  }
+  else {
+    if( $( "#p04_chb2" ).prop( "checked" ) ) {
+      msg = msg + "encryption.";
+      f = true;
+    }
+  }
+  if( f ) {
+    $( "#p04_pas1" ).val( prompt( msg ) );
+  }
+}
+
+function getMasterPassword() {
+  return $( "#p04_pas1" ).val();
+  //return idSgn;
+  //return "1234"
+}
+
+function isDecrypting() {
+  return $( "#p04_chb1" ).prop( "checked" );
+  //return false;
+  //return true;
+}
+
+function isEncrypting() {
+  return $( "#p04_chb2" ).prop( "checked" )
+  //return false;
+  //return true;
 }
 
 function isTextChanged( id ) {
@@ -914,6 +961,16 @@ function isFlipChanged( id ) {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
     return ( val == null || $( "select[name='" + id + "'] option:selected" ).val() != val );
+  }
+}
+
+function isCheckChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    val=(val==="false")?false:true;
+    return ( val == null || $( id ).prop( "checked" ) != val );
   }
 }
 
@@ -970,12 +1027,26 @@ function restoreFlipSetting( id ) {
   }
 }
 
+function restoreCheckSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    val=(val==="false")?false:true;
+    if( val != null ) {
+      $( id ).prop( "checked", val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( id ).checkboxradio( "refresh" );
+      } );
+    }
+  }
+}
+
 function restoreSetting() {
   var i;
-
   for( i = 0; i < settings.length; i++ ) {
     settings[i].restoreSetting();
-  }  
+  }
 }
 
 function saveTextSetting( id ) {
@@ -1007,6 +1078,15 @@ function saveFlipSetting( id ) {
     sKey.id = id;
     val = $( "select[name='" + id + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
+  }
+}
+
+function saveCheckSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( id ).prop( "checked" );
+    storage.setItem( JSON.stringify( sKey ), val );
   }
 }
 
