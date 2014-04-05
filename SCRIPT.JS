@@ -12,8 +12,9 @@ var storage = localStorage;
 var vals, subs;
 var settings;
 var getPassword;
+var isDecrypting, isEncrypting;
 
-var appVer = "0.94";
+var appVer = "0.95";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
@@ -64,7 +65,7 @@ function store( k, getRecord ) {
 
 function extract( k ) {
   var v = storage.getItem( k );
-  var key, obj, h;
+  var key, obj;
   var p;
 
   if( v == null ) {
@@ -77,11 +78,9 @@ function extract( k ) {
       v = null;
     }
     else {
-      obj = JSON.parse( v );
       p = getPassword();
-      h = getHash( p + obj.slt );
-
-      if( h === obj.hsh ) {
+      if( isDecryptable( k, p ) ) {
+        obj = JSON.parse( v );
         v = CryptoJS.AES.decrypt( obj.val, p );
         if( v != null){
           v = v.toString( CryptoJS.enc.Utf8 );
@@ -94,6 +93,11 @@ function extract( k ) {
   }
 
   return v;
+}
+
+function isDecryptable( k, p ) {
+  var obj = JSON.parse( storage.getItem( k ) );
+  return ( obj.hsh === getHash( p + obj.slt ) );
 }
 
 function getHash( src ) {
@@ -131,6 +135,8 @@ function initApp() {
 //alert("initApp: begin");
 
   getPassword = getMasterPassword;
+  isDecrypting = getIsDecryptingFromUI;
+  isEncrypting = getIsEncryptingFromUI;
 
   // Main #1
   $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
@@ -159,7 +165,7 @@ function initApp() {
 
   $( "#p02_frm1" ).submit( cancelSubmit );
 
-  // Details #3
+  // Edit #3
   $( "#p03_sel1" ).change( function( e ) {
 //alert(e.target.value);
     if( e.target.value.length > 0 ) {
@@ -592,20 +598,13 @@ function deleteAllRecords() {
 
 function decryptRecord( t, v ){
 //alert("decryptRecord: begin");
-  msg = "Can not decrypt the record by master password. Enter another password.";
   vKey.time = t;
   vKey.version = v;
   var k = JSON.stringify( vKey );
-  var obj = JSON.parse( storage.getItem( k ) );
-  var p = prompt( msg );
 
-  if( p == null || p.length <= 0 || ( function() { 
-    var ret = ( obj.hsh !== getHash( p + obj.slt ) );
-    if( ret ) {
-      alert( "Wrong password." );
-    }
-    return ret;
-  } )() ) {
+  var p = checkPassword( k );
+
+  if( p == null ) {
     $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
       e.stopPropagation();
       e.preventDefault();
@@ -618,8 +617,12 @@ function decryptRecord( t, v ){
       getPassword = function() {
         return p;
       }
+      isDecrypting = function() {
+        return true;
+      }
       loadRecord( k );
       getPassword = getMasterPassword;
+      isDecrypting = getIsDecryptingFromUI;
     } );
   }
 //alert("decryptRecord: end");
@@ -631,7 +634,7 @@ function editRecord( t, v ){
   vKey.time = t;
   vKey.version = v;
   var k = JSON.stringify( vKey );
-  if( storage.getItem( k ) == null ){
+  if( JSON.parse( extract( k ) ) == null ) {
     $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
       e.stopPropagation();
       e.preventDefault();
@@ -759,10 +762,29 @@ function loadRecord( k ) {
 //alert("loadRecord: end");
 }
 
+function checkPassword( k ) {
+//alert("checkPassword: begin");
+  var msg = isDecrypting()?"Can not decrypt the record by master password. Enter another password.":"Enter password.";
+  var p = prompt( msg );
+
+  if( p == null || p.length <= 0 ) {
+    p = null;
+  }
+  else {
+    if( ! isDecryptable( k, p ) ) {
+      alert( "Wrong password." );
+      p = null;
+    }
+  }
+//alert("checkPassword: end: "+p);
+  return p;
+}
+
 function isSameRecord( cr, nr ) {
+//alert("isSameRecord: begin");
 //alert( JSON.stringify(cr) );
 //alert( JSON.stringify(nr) );
-  return (
+  var ret = (
   cr.val == nr.val && 
   cr.opt == nr.opt && 
   cr.sub == nr.sub && 
@@ -781,6 +803,10 @@ function isSameRecord( cr, nr ) {
   ||( cr.dsc != undefined && 
       cr.dsc == $( "#p03_txa1" ).val() ) )
   );
+
+//alert("isSameRecord: end: "+ret);
+
+  return ret;
 }
 
 function getDateFromUI(){
@@ -925,13 +951,13 @@ function getMasterPassword() {
   //return "1234"
 }
 
-function isDecrypting() {
+function getIsDecryptingFromUI() {
   return $( "#p04_chb1" ).prop( "checked" );
   //return false;
   //return true;
 }
 
-function isEncrypting() {
+function getIsEncryptingFromUI() {
   return $( "#p04_chb2" ).prop( "checked" )
   //return false;
   //return true;
