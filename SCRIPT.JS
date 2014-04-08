@@ -14,7 +14,7 @@ var settings;
 var getPassword;
 var isDecrypting, isEncrypting;
 
-var appVer = "0.95";
+var appVer = "0.96";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
@@ -234,6 +234,22 @@ function initMainUI() {
 
   if( val != null && val.length > 0 ) {
     elms = toTrimedStringArray( val );
+
+/*
+0: #p04_txa1
+2: p04_rch2
+8: #p04_chb1
+9: #p04_chb2
+*/
+
+    if( $( idKey[8] ).prop( "checked" ) || $( idKey[9] ).prop( "checked" ) ) {
+      $( "#p01_btnl" ).toggleClass( "ui-icon-bars", false );
+      $( "#p01_btnl" ).toggleClass( "ui-icon-lock", true );
+    }
+    else {
+      $( "#p01_btnl" ).toggleClass( "ui-icon-bars", true );
+      $( "#p01_btnl" ).toggleClass( "ui-icon-lock", false );
+    }
 
     for( i = 0; i < elms.length; i++ ) {
       result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + removeTag( elms[i] ) + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
@@ -767,15 +783,11 @@ function checkPassword( k ) {
   var msg = isDecrypting()?"Can not decrypt the record by master password. Enter another password.":"Enter password.";
   var p = prompt( msg );
 
-  if( p == null || p.length <= 0 ) {
+  if( p != null && ! isDecryptable( k, p ) ) {
+    alert( "Wrong password." );
     p = null;
   }
-  else {
-    if( ! isDecryptable( k, p ) ) {
-      alert( "Wrong password." );
-      p = null;
-    }
-  }
+
 //alert("checkPassword: end: "+p);
   return p;
 }
@@ -921,8 +933,9 @@ function initSettingUI() {
 }
 
 function setMasterPassword() {
-  var msg = "Enter master password to ";
+  var msg = "Enter master password for ";
   var f = false;
+  var val;
 
   if( $( "#p04_chb1" ).prop( "checked" ) ) {
     msg = msg + "decryption";
@@ -940,8 +953,15 @@ function setMasterPassword() {
       f = true;
     }
   }
+  msg = msg + "If canceled, recording data would not be crypted.";
   if( f ) {
-    $( "#p04_pas1" ).val( prompt( msg ) );
+    val = prompt( msg );
+    if( val == null ) {
+      $( "#p04_chb1" ).prop( "checked", false );
+      $( "#p04_chb2" ).prop( "checked", false );
+      //val = "";
+    }
+    $( "#p04_pas1" ).val( val );
   }
 }
 
