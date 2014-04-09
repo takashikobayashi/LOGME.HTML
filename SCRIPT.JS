@@ -11,27 +11,98 @@ $.event.special.swipe.verticalDistanceThreshold = 20;
 var storage = localStorage;
 var vals, subs;
 var settings;
+var getPassword;
+var isDecrypting, isEncrypting;
 
-var appVer = "0.88";
-var idDef = [ "lgme", "00" ];
-var vKey = { "sign":idDef[0], "version":idDef[1], "time":"", "isDel":false };
+var appVer = "0.97";
+var hashOp = { "outputLength":256 };
+var idSgn = "lgme";
+var idVer = [ "00", "01" ];
 
-var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5" ];
-var sKey = { "sign":idDef[0], "version":idDef[1], "id":"" };
+var vKey = { "sign":idSgn, "version":idVer[0], "time":"", "isDel":false };
+
+var idKey = [ "#p04_txa1", "p04_rch1", "p04_rch2", "p04_rch3", "p04_flp1", "#p04_txa2", "p04_rch4", "p04_rch5", "#p04_chb1", "#p04_chb2" ];
+var sKey = { "sign":idSgn, "version":idVer[0], "id":"" };
 
 
 function isKey( k ) {
-  var obj = JSON.parse( k );
+  var key = JSON.parse( k );
+  var ret = ( key.sign == idSgn && idVer.indexOf( key.version ) != -1 && key.time != undefined );
 
-  return obj.sign == idDef[0] && obj.version == idDef[1] && obj.time != undefined;
+/*
+  if( ret && ! confirm( k ) ){
+    storage.removeItem( k );
+    return false;
+  }
+*/
+  return ret;
 }
 
-function store( t, getRecord ) {
+function createKey( t ) {
   vKey.time = t;
+  vKey.version = idVer[isEncrypting()?1:0];
 
-  storage.setItem( JSON.stringify( vKey ), JSON.stringify( getRecord() ) );
-//alert(JSON.stringify(vKey));
-//alert(JSON.stringify(getRecord()));
+  return JSON.stringify( vKey );
+}
+
+function store( k, getRecord ) {
+  var v = JSON.stringify( getRecord() );
+  var key = JSON.parse( k );
+  var val;
+  var p;
+
+  if( key.version == idVer[1] && isEncrypting() ) {
+    p = getPassword();
+    v = CryptoJS.AES.encrypt( v, p );
+    val = {"val":v.toString(),"slt":v.salt.toString(),"hsh":getHash( p + v.salt.toString() )};
+    v = JSON.stringify( val );
+  }
+
+  storage.setItem( k, v );
+//alert(k);
+//alert(v);
+}
+
+function extract( k ) {
+  var v = storage.getItem( k );
+  var key, obj;
+  var p;
+
+  if( v == null ) {
+    return v;
+  }
+
+  key = JSON.parse( k );
+  if( key.version === idVer[1] ) {
+    if( ! isDecrypting() ) {
+      v = null;
+    }
+    else {
+      p = getPassword();
+      if( isDecryptable( k, p ) ) {
+        obj = JSON.parse( v );
+        v = CryptoJS.AES.decrypt( obj.val, p );
+        if( v != null){
+          v = v.toString( CryptoJS.enc.Utf8 );
+        }
+      }
+      else {
+        v = null;
+      }
+    }
+  }
+
+  return v;
+}
+
+function isDecryptable( k, p ) {
+  var obj = JSON.parse( storage.getItem( k ) );
+  return ( obj.hsh === getHash( p + obj.slt ) );
+}
+
+function getHash( src ) {
+  var hash = CryptoJS.SHA3( src, hashOp );
+  return hash.toString();
 }
 
 $(document).one( "pagecreate", function( e ){
@@ -56,11 +127,16 @@ function initNameSpace() {
   }
 
   LOGME.handler.editRecord = editRecord;
+  LOGME.handler.decryptRecord = decryptRecord;
   LOGME.handler.toggleList = toggleList;
 }
 
 function initApp() {
 //alert("initApp: begin");
+
+  getPassword = getMasterPassword;
+  isDecrypting = getIsDecryptingFromUI;
+  isEncrypting = getIsEncryptingFromUI;
 
   // Main #1
   $( "#p01" ).on( "swipeleft", "#p01_cont", function( e ) {
@@ -89,7 +165,7 @@ function initApp() {
 
   $( "#p02_frm1" ).submit( cancelSubmit );
 
-  // Details #3
+  // Edit #3
   $( "#p03_sel1" ).change( function( e ) {
 //alert(e.target.value);
     if( e.target.value.length > 0 ) {
@@ -112,8 +188,8 @@ function initApp() {
     else {
       $.mobile.changePage( "#p01", { transition: "slide" } );
     }
+    showCryptionMode();
   } );
-
 
   $( "#p04_frm1" ).submit( cancelSubmit );
 
@@ -148,6 +224,7 @@ function cancelSubmit( e ) {
   return false;
 }
 
+
 // #p01 functions
 
 function initMainUI() {
@@ -159,6 +236,15 @@ function initMainUI() {
 
   if( val != null && val.length > 0 ) {
     elms = toTrimedStringArray( val );
+
+/*
+0: #p04_txa1
+2: p04_rch2
+8: #p04_chb1
+9: #p04_chb2
+*/
+
+    showCryptionMode();
 
     for( i = 0; i < elms.length; i++ ) {
       result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + removeTag( elms[i] ) + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
@@ -198,23 +284,30 @@ function initMainUI() {
 }
 
 function initMenus() {
+//alert("initMenus: begin");
   var i;
-  var rec, k, t;
+  var obj, k, t;
   vals = [];
   subs = [];
   for( i = 0; i < storage.length; i++ ) {
-    k = storage.key(i);
+    k = storage.key( i );
     if( ! isKey( k ) ) {
       continue;
     }
-    rec = JSON.parse( storage.getItem( k ) );
+    obj = JSON.parse( extract( k ) );
+    if( obj == null ) {
+      continue;
+    }
+
     t = JSON.parse( k ).time;
 
-    addTitleArray( t, rec.val );
-    addSubArray( t, rec.sub );
+    addTitleArray( t, obj.val );
+    addSubArray( t, obj.sub );
   }
   updateTitleMenu();
   updateSubMenu();
+
+//alert("initMenus: end");
 }
 
 function updateMenus( t, val, sub ) {
@@ -296,40 +389,50 @@ function updateSubMenu() {
   initSelectUI( idKey[5], "#p03_sel2", suba );
 }
 
+function showCryptionMode() {
+  if( $( idKey[8] ).prop( "checked" ) || $( idKey[9] ).prop( "checked" ) ) {
+    $( "#p01_btnl" ).toggleClass( "ui-icon-bars", false );
+    $( "#p01_btnl" ).toggleClass( "ui-icon-lock", true );
+  }
+  else {
+    $( "#p01_btnl" ).toggleClass( "ui-icon-bars", true );
+    $( "#p01_btnl" ).toggleClass( "ui-icon-lock", false );
+  }
+}
+
 function recordClicked( t, val ) {
   var getRecord = function() {
     return { "val":val, "opt":$( "input[name='p01_opt']:checked" ).val(), "sub":$( "input[name='p01_txt1']" ).val() };
   }
   var obj;
+  var k = createKey( t );
 
-  store( t, getRecord );
+  store( k, getRecord );
 
   if( $( "input[name='p01_chb1']" ).is( ":checked" ) && navigator.geolocation ) {
     navigator.geolocation.getCurrentPosition( function( pos ) {
-      addLocation( t, pos.coords.latitude, pos.coords.longitude );
+      addLocation( k, pos.coords.latitude, pos.coords.longitude );
     }, notifyError );
   } // end of if
 
   postRecord();
 
-  vKey.time = t;
-  obj = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+  obj = JSON.parse( extract( k ) );
 
 //alert(JSON.stringify(obj));
-  updateMenus( t, obj.val, obj.sub );
+  updateMenus( ( JSON.parse( k ) ).time, obj.val, obj.sub );
 
   $("#p01_btns .ui-btn-active").toggleClass("ui-btn-active");
 }
 
-function addLocation( t, lat, lng ) {
-  vKey.time = t;
-  var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+function addLocation( k, lat, lng ) {
+  var record = JSON.parse( extract( k ) );
 
   var getRecord = function() {
     return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":lat, "lng":lng };
   }
 
-  store( t, getRecord );
+  store( k, getRecord );
 }
 
 function notifyError( err ) {
@@ -408,65 +511,78 @@ function updateButtons() {
 function updateList() {
 //alert("updateList: begin, mode: "+getModeValueFromUI());
   var i;
-  var result = "";
+  var ret = "";
   var divider = "";
-  var keys;
-  var d = new Date(), k, v;
+  var fltrTxt, funcName, dispStr;
+  var keys, key, k;
+  var obj;
+  var d = new Date();
   var mode = getModeValueFromUI();
 
-  if( storage.length > 0 ) {
-    keys = [];
-    for( i = 0; i < storage.length; i++ ) {
-      k = storage.key(i);
-      if( isKey( k ) ) {
-        keys.push( JSON.parse( k ).time );
-      }
-    }
-    keys.sort();
-
-    if( mode >= 2 ) {
-      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"true\">";
-    }
-    else {
-      result = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"false\">";
-    }
-    divider = "";
-
-    for( i = 0; i < keys.length; i++ ){
-      if( mode % 2 == 1 ) {
-        k = keys[keys.length-i-1];
-      }
-      else {
-        k = keys[i];
-      }
-      d.setTime(k);
-      if( divider != getDisplayDateString( d ) ) {
-        divider = getDisplayDateString( d );
-        result += "<li data-role=\"list-divider\">" + divider + "</li>";
-      }
-
-      vKey.time = k;
-      v = JSON.parse( storage.getItem(JSON.stringify(vKey)) );
-
-      result += "<li data-filtertext=\"" + divider + " " + getDisplayTimeString( d ) +  " " + v.val + " " + v.sub + "\"><a href=\"#p03\" onClick=\"LOGME.handler.editRecord(" + k + ")\">" + getDisplayTimeString( d ) + " " + v.val;
-      if( v.opt != "None" ) {
-        result += " " + v.opt;
-      }
-      if( v.sub.length > 0 ) {
-        result += " " + v.sub;
-      }
-      if( v.lat != undefined && v.lng != undefined ) {
-        result += "<span class='ui-li-count'>!</span>";
-      }
-      result += "</a></li>";
-
-    }
-    result += "</ul>";
+  if( storage.length <= 0 ) {
+    return ret;
   }
 
-//alert("updateList: end, result: "+result);
+  keys = [];
+  for( i = 0; i < storage.length; i++ ) {
+    k = storage.key( i );
+    if( isKey( k ) ) {
+      keys.push( JSON.parse( k ) );
+    }
+  }
+  keys.sort( function( a, b ) {
+    return a.time - b.time;
+  } );
 
-  return result;
+  ret = "<ul id=\"p02_list\" data-role=\"listview\" data-filter=\"" + (mode >= 2) + "\">";
+  divider = "";
+
+  for( i = 0; i < keys.length; i++ ){
+    if( mode % 2 == 1 ) {
+      key = keys[keys.length-i-1];
+    }
+    else {
+      key = keys[i];
+    }
+
+    d.setTime( key.time );
+    if( divider != getDisplayDateString( d ) ) {
+      divider = getDisplayDateString( d );
+      ret += "<li data-role=\"list-divider\">" + divider + "</li>";
+    }
+
+    k = JSON.stringify( key );
+    obj = JSON.parse( extract( k ) );
+
+    if( obj == null ) {
+      fltrTxt = divider + " " + getDisplayTimeString( d );
+      funcName = "decryptRecord";
+      dispStr = getDisplayTimeString( d ) + "<span class='ui-li-count'>?</span>";
+    }
+    else {
+      fltrTxt = divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub;
+      funcName = "editRecord";
+      dispStr = getDisplayTimeString( d ) + " " + obj.val;
+    }
+    ret += "<li data-filtertext='" + fltrTxt + "'><a href='#p03' onClick=\"LOGME.handler." + funcName + "(" + key.time + ",'" + key.version + "')\">" + dispStr;
+
+    if( obj != null ) {
+      if( obj.opt != "None" ) {
+        ret += " " + obj.opt;
+      }
+      if( obj.sub.length > 0 ) {
+        ret += " " + obj.sub;
+      }
+      if( obj.lat != undefined && obj.lng != undefined ) {
+        ret += "<span class='ui-li-count'>!</span>";
+      }
+    }
+    ret += "</a></li>";
+  }
+  ret += "</ul>";
+
+//alert("updateList: end, return: "+ret);
+  return ret;
 }
 
 function deleteAllClicked() {
@@ -478,22 +594,23 @@ function deleteAllClicked() {
     initMenus();
   }
 
-  $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
+  $( "#p02_btns .ui-btn-active" ).toggleClass( "ui-btn-active", false );
 }
 
 function deleteAllRecords() {
 //alert("deleteAllRecords: begin");
   var k;
-  var i = 0;
+  var ks = [];
+  var i;
 
-  while( storage.length > i ) {
-    k = storage.key(i);
+  for( i = 0; i < storage.length; i++ ) {
+    k = storage.key( i );
     if( isKey( k ) ) {
-      storage.removeItem( k );
+      ks.push( k );
     }
-    else {
-      i++;
-    }
+  }
+  for( i = 0; i < ks.length; i++ ) {
+    storage.removeItem( ks[ i ] );
   }
 //alert("deleteAllRecords: end");
 }
@@ -501,11 +618,51 @@ function deleteAllRecords() {
 
 // #p03 functions
 
-function editRecord( t ){
-//alert("editRecord: begin");
+function decryptRecord( t, v ){
+//alert("decryptRecord: begin");
   vKey.time = t;
-  if( storage.getItem( JSON.stringify( vKey ) ) == null ){
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
+  vKey.version = v;
+  var k = JSON.stringify( vKey );
+
+  var p = checkPassword( k );
+
+  if( p == null ) {
+    $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
+      e.stopPropagation();
+      e.preventDefault();
+      $.mobile.changePage( "#p02" );
+
+      return false;
+    } );
+  }
+  else {
+    $( "body" ).one( "pagecontainerbeforeshow", function( e, ui ){
+      getPassword = function() {
+        return p;
+      }
+      isDecrypting = function() {
+        return true;
+      }
+      loadRecord( k );
+      getPassword = getMasterPassword;
+      isDecrypting = getIsDecryptingFromUI;
+    } );
+  }
+
+  $( "#p02_list .ui-btn-active" ).toggleClass( "ui-btn-active", false );
+
+//alert("decryptRecord: end");
+}
+
+function editRecord( t, v ){
+//alert("editRecord: begin");
+
+  vKey.time = t;
+  vKey.version = v;
+  var k = JSON.stringify( vKey );
+  if( JSON.parse( extract( k ) ) == null ) {
+    $( "body" ).one( "pagecontainerbeforetransition", function( e, ui ) {
+      e.stopPropagation();
       e.preventDefault();
       alert( "No data in storage." );
       $.mobile.changePage( "#p02" );
@@ -513,47 +670,47 @@ function editRecord( t ){
     } );
   }
   else {
-    $( "#p03" ).one( "pagebeforeshow", function( e ){
-      loadRecord( t );
+    $( "body" ).one( "pagecontainerbeforeshow", function( e, ui ){
+      loadRecord( k );
     } );
   }
 //alert("editRecord: end");
 }
 
-function loadRecord( t ) {
+function loadRecord( k ) {
 //alert("loadRecord: begin");
   var getRecord;
-  var record;
+  var obj;
   var hasPos = false;
   var lat, lng;
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
 
   $( "#p03_lbl1" ).text( " [" + getDisplayFullString( d ) + "]" );
   $( "#p03_txt1" ).val( getISODateString( d ) );
 
-  vKey.time = t;
-  record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
+  obj = JSON.parse( extract( k ) );
 
-  $( "#p03_lbl2" ).text( " [" + record.val + "]" );
-  $( "#p03_txt2" ).val( record.val );
+  $( "#p03_lbl2" ).text( " [" + obj.val + "]" );
+  $( "#p03_txt2" ).val( obj.val );
 
-  $( "#p03_lbl3" ).text( " [" + record.opt + "]" );
-  $( "input[name='p03_rch1'][value='" + record.opt + "']" ).prop( "checked", true );
-  $( "input[name='p03_rch1'][value!='" + record.opt + "']" ).prop( "checked", false );
+  $( "#p03_lbl3" ).text( " [" + obj.opt + "]" );
+  $( "input[name='p03_rch1'][value='" + obj.opt + "']" ).prop( "checked", true );
+  $( "input[name='p03_rch1'][value!='" + obj.opt + "']" ).prop( "checked", false );
   $( "input[name='p03_rch1']" ).checkboxradio( "refresh" );
 
-  $( "#p03_lbl4" ).text( " [" + record.sub + "]" );
-  $( "#p03_txt3" ).val( record.sub );
+  $( "#p03_lbl4" ).text( " [" + obj.sub + "]" );
+  $( "#p03_txt3" ).val( obj.sub );
 
   $( "#p03_map1" ).empty();
-  if( record.lat == undefined || record.lng == undefined ) {
+  if( obj.lat == undefined || obj.lng == undefined ) {
     $( "#p03_btn1" ).button( "disable" );
   }
   else {
     hasPos = true;
-    lat = record.lat;
-    lng = record.lng;
+    lat = obj.lat;
+    lng = obj.lng;
 
     $( "#p03_btn1" ).button( "enable" );
     $( "#p03_map1" ).append( getGoogleMapImgTag( lat, lng, getZoomValueFromUI() ) );
@@ -579,8 +736,8 @@ function loadRecord( t ) {
     $("#p03_btns .ui-btn-active").toggleClass("ui-btn-active");
   } ); // end of click
 
-  if( record.dsc != undefined ){
-    $( "#p03_txa1" ).val( record.dsc );
+  if( obj.dsc != undefined ){
+    $( "#p03_txa1" ).val( obj.dsc );
   }
   else {
     $( "#p03_txa1" ).val( "" );
@@ -603,7 +760,7 @@ function loadRecord( t ) {
 
   $( "#p03_btnd" ).unbind( "click" );
   $( "#p03_btnd" ).click( function( e ){
-      deleteClicked( t );
+      deleteClicked( k );
   } );
 
   getRecord = function() {
@@ -621,20 +778,35 @@ function loadRecord( t ) {
 
   $( "#p03_btn2" ).unbind( "click" );
   $( "#p03_btn2" ).click( function( e ){
-    if( isSameISODate( d, getDateFromUI() ) && isSameRecord( record, getRecord() ) ) {
+    if( isSameISODate( d, getDateFromUI() ) && isSameRecord( obj, getRecord() ) ) {
       $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
     }
     else {
-      confirmUpdate( t, getDateFromUI(), getRecord );
+      confirmUpdate( k, getDateFromUI(), getRecord );
     }
   } );
 //alert("loadRecord: end");
 }
 
+function checkPassword( k ) {
+//alert("checkPassword: begin");
+  var msg = isDecrypting()?"Can not decrypt the record by master password. Enter another password.":"Enter password.";
+  var p = prompt( msg );
+
+  if( p != null && ! isDecryptable( k, p ) ) {
+    alert( "Wrong password." );
+    p = null;
+  }
+
+//alert("checkPassword: end: "+p);
+  return p;
+}
+
 function isSameRecord( cr, nr ) {
+//alert("isSameRecord: begin");
 //alert( JSON.stringify(cr) );
 //alert( JSON.stringify(nr) );
-  return (
+  var ret = (
   cr.val == nr.val && 
   cr.opt == nr.opt && 
   cr.sub == nr.sub && 
@@ -653,6 +825,10 @@ function isSameRecord( cr, nr ) {
   ||( cr.dsc != undefined && 
       cr.dsc == $( "#p03_txa1" ).val() ) )
   );
+
+//alert("isSameRecord: end: "+ret);
+
+  return ret;
 }
 
 function getDateFromUI(){
@@ -689,21 +865,20 @@ function initSelectUI( source, target, adds ) {
   }
 }
 
-function deleteClicked( t ) {
+function deleteClicked( k ) {
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
   var msg = "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?";
 
   if( confirm( msg ) ) {
-    deleteRecord( t );
+    deleteRecord( k );
     initMenus();
     $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
   }
 }
 
-function deleteRecord( t ) {
-  vKey.time = t;
-  var k = JSON.stringify( vKey );
+function deleteRecord( k ) {
   if( isKey( k ) ) {
     storage.removeItem( k );
   }
@@ -721,6 +896,8 @@ function deleteRecord( t ) {
 5: #p04_txa2
 6: p04_rch4
 7: p04_rch5
+8: #p04_chb1
+9: #p04_chb2
 */
 
 function initSettingUI() {
@@ -749,9 +926,71 @@ function initSettingUI() {
   settings[4].restoreSetting = restoreFlipSetting( idKey[4] );
   settings[4].saveSetting = saveFlipSetting( idKey[4] );
 
+  ids = [8, 9];
+  for( i = 0; i < ids.length; i++ ) {
+    settings[ids[i]] = {};
+    settings[ids[i]].isChanged = isCheckChanged( idKey[ids[i]] );
+    settings[ids[i]].restoreSetting = restoreCheckSetting( idKey[ids[i]] );
+    settings[ids[i]].saveSetting = saveCheckSetting( idKey[ids[i]] );
+  }
+
   restoreSetting();
   saveSetting();
+
+  setMasterPassword();
+
 //alert("initSettingUI: end");
+}
+
+function setMasterPassword() {
+  var msg = "Enter master password for ";
+  var f = false;
+  var val;
+
+  if( $( "#p04_chb1" ).prop( "checked" ) ) {
+    msg = msg + "decryption";
+    f = true;
+    if( $( "#p04_chb2" ).prop( "checked" ) ) {
+      msg = msg + " and encryption.";
+    }
+    else {
+      msg = msg + ".";
+    }
+  }
+  else {
+    if( $( "#p04_chb2" ).prop( "checked" ) ) {
+      msg = msg + "encryption.";
+      f = true;
+    }
+  }
+  msg = msg + "If canceled, recording data would not be crypted.";
+  if( f ) {
+    val = prompt( msg );
+    if( val == null ) {
+      $( "#p04_chb1" ).prop( "checked", false );
+      $( "#p04_chb2" ).prop( "checked", false );
+      //val = "";
+    }
+    $( "#p04_pas1" ).val( val );
+  }
+}
+
+function getMasterPassword() {
+  return $( "#p04_pas1" ).val();
+  //return idSgn;
+  //return "1234"
+}
+
+function getIsDecryptingFromUI() {
+  return $( "#p04_chb1" ).prop( "checked" );
+  //return false;
+  //return true;
+}
+
+function getIsEncryptingFromUI() {
+  return $( "#p04_chb2" ).prop( "checked" )
+  //return false;
+  //return true;
 }
 
 function isTextChanged( id ) {
@@ -778,6 +1017,16 @@ function isFlipChanged( id ) {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
     return ( val == null || $( "select[name='" + id + "'] option:selected" ).val() != val );
+  }
+}
+
+function isCheckChanged( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    val=(val==="false")?false:true;
+    return ( val == null || $( id ).prop( "checked" ) != val );
   }
 }
 
@@ -834,12 +1083,26 @@ function restoreFlipSetting( id ) {
   }
 }
 
+function restoreCheckSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = storage.getItem( JSON.stringify( sKey ) );
+    if( val != null ) {
+      val=(val==="false")?false:true;
+      $( id ).prop( "checked", val );
+      $( "#p04" ).one( "pagebeforeshow", function( e ){
+        $( id ).checkboxradio( "refresh" );
+      } );
+    }
+  }
+}
+
 function restoreSetting() {
   var i;
-
   for( i = 0; i < settings.length; i++ ) {
     settings[i].restoreSetting();
-  }  
+  }
 }
 
 function saveTextSetting( id ) {
@@ -871,6 +1134,15 @@ function saveFlipSetting( id ) {
     sKey.id = id;
     val = $( "select[name='" + id + "'] option:selected" ).val();
   storage.setItem( JSON.stringify( sKey ), val );
+  }
+}
+
+function saveCheckSetting( id ) {
+  var val;
+  return function() {
+    sKey.id = id;
+    val = $( id ).prop( "checked" );
+    storage.setItem( JSON.stringify( sKey ), val );
   }
 }
 
@@ -1010,11 +1282,12 @@ function confirmSaveSetting() {
 
 // p06 functions
 
-function confirmUpdate( t, dd, getRecord ){
+function confirmUpdate( k, dd, getRecord ){
 //alert("confirmUpdate: begin");
-  var doUpdate, doSaveNew, doUpdateMenus;
+  var doUpdate, doSaveNew;
+  var key = JSON.parse( k );
   var d = new Date();
-  d.setTime( t );
+  d.setTime( key.time );
 
   $( "#p06_btnc" ).unbind( "click" );
   $( "#p06_btnc" ).click( function( e ){
@@ -1026,9 +1299,10 @@ function confirmUpdate( t, dd, getRecord ){
 
   if( isSameISODate( d, dd ) ){
     doUpdate = function( e ){
-        restore( t, getRecord );
-        initMenus();
-        $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
+      cleanupRecords( key.time );
+      restore( createKey( key.time ), getRecord );
+      initMenus();
+      $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
     };
     doSaveNew = function( e ){
       alert( "Date or time must be changed." );
@@ -1036,18 +1310,18 @@ function confirmUpdate( t, dd, getRecord ){
     $( "#p06_btnn" ).toggleClass( "ui-state-disabled", true );
   }
   else {
-    doUpdate = function( e ) {
-      if( isOverwrite( dd.getTime() ) ){
-        restore( dd.getTime(), getRecord );
-        deleteRecord( t );
+    doUpdate = function( e ){
+      if( isOverwrite( dd ) ) {
+        restore( createKey( dd.getTime() ), getRecord );
+        cleanupRecords( key.time );
         initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
     doSaveNew = function( e ){
-      if( isOverwrite( dd.getTime() ) ) {
-        restore( dd.getTime(), getRecord );
-        updateMenus( t, getRecord().val, getRecord().sub );
+      if( isOverwrite( dd ) ) {
+        restore( createKey( dd.getTime() ), getRecord );
+        initMenus();
         $.mobile.changePage( "#p02", { transition: "pop", reverse: true } );
       }
     };
@@ -1061,39 +1335,77 @@ function confirmUpdate( t, dd, getRecord ){
 //alert("confirmUpdate: end");
 }
 
-function isOverwrite( t ) {
-  var d = new Date();
-  d.setTime( t );
+function getExistingKeys( t ) {
+//alert("getExistingKeys: begin");
+  var i, k = null, v = null;
+  var ret = [];
+
   vKey.time = t;
-  var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
-
-  return storage.getItem( JSON.stringify( vKey ) ) == null || ( storage.getItem( JSON.stringify( vKey ) ) != null && confirm( msg ) );
-}
-
-function restore( t, getRecord ) {
-  store( t, getRecord );
-
-  if( $( "#p03_txa1" ).val().length > 0 ){
-    addDescription( t, $( "#p03_txa1" ).val() );
-  }
-}
-
-function addDescription( t, desc ){
-  vKey.time = t;
-  var record = JSON.parse( storage.getItem( JSON.stringify( vKey ) ) );
-
-//alert("before: "+JSON.stringify(record));
-
-  var getRecord = function() {
-    if( record.lat == undefined || record.lng == undefined ) {
-      return { "val":record.val, "opt":record.opt, "sub":record.sub, "dsc":desc };
+  for( i = 0; i < idVer.length; i++ ) {
+    vKey.version = idVer[i];
+    k = JSON.stringify( vKey );
+    v = storage.getItem( k );
+    if( v != null ) {
+      ret.push( k );
     }
     else {
-      return { "val":record.val, "opt":record.opt, "sub":record.sub, "lat":record.lat, "lng":record.lng, "dsc":desc };
+      v = null;
+    }
+  }
+//alert("getExistingKeys: end: "+ ret);
+  return ret.length==0?null:ret;
+}
+
+function cleanupRecords( t ) {
+  var i, ks = getExistingKeys( t );
+  if( ks == null ) {
+    return;
+  }
+
+  for( i = 0; i < ks.length; i++ ) {
+    deleteRecord( ks[i] );
+  }
+}
+
+function isOverwrite( d ) {
+  var msg = "Record on " + getDisplayFullString( d ) + " has already existed. Over write?";
+  var ret = false;
+  var i, ks = getExistingKeys( d.getTime() );
+
+  if( ks == null ) {
+    return true;
+  }
+
+  ret = confirm( msg );
+  if( ret ) {
+    for( i = 0; i < ks.length; i++ ) {
+      deleteRecord( ks[i] );
     }
   }
 
-  store( t, getRecord );
+  return ret;
+}
+
+function restore( k, getRecord ) {
+  store( k, getRecord );
+
+  if( $( "#p03_txa1" ).val().length > 0 ){
+    addDescription( k, $( "#p03_txa1" ).val() );
+  }
+}
+
+function addDescription( k, desc ){
+  var obj = JSON.parse( extract( k ) );
+  var getRecord = function() {
+    if( obj.lat == undefined || obj.lng == undefined ) {
+      return { "val":obj.val, "opt":obj.opt, "sub":obj.sub, "dsc":desc };
+    }
+    else {
+      return { "val":obj.val, "opt":obj.opt, "sub":obj.sub, "lat":obj.lat, "lng":obj.lng, "dsc":desc };
+    }
+  }
+
+  store( k, getRecord );
 }
 
 

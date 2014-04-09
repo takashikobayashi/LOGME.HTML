@@ -3,11 +3,15 @@
 <html>
 <!--html manifest="cache.manifest"-->
  <head>
-  <title>LOG ME v0.8</title>
+  <title>LOG ME v0.9</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=0">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <script type="text/javascript" src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
+
+  <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
 
   <script type="text/javascript" src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 
@@ -28,11 +32,11 @@ $(document).bind("mobileinit", function(){
  </head>
  <body>
 
-  <div data-role="page" id="p01" data-title="LOG ME v0.8">
+  <div data-role="page" id="p01" data-title="LOG ME v0.9">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p04" data-icon="gear" data-direction="reverse" >Setting</a>
     <h1>LOG ME</h1>
-    <a href="#p02" data-icon="bars">List</a>
+    <a href="#p02" data-icon="bars" id="p01_btnl">List</a>
    </header><!-- /header -->
    <div class="ui-content" role="main" id="p01_cont">
 
@@ -89,10 +93,10 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p02" data-title="LOG ME v0.8">
+  <div data-role="page" id="p02" data-title="LOG ME v0.9">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p01" data-icon="back" data-direction="reverse">Back</a>
-    <h1>LOG ME</h1>
+    <h1>List<!--LOG ME--></h1>
     <a href="#" data-icon="carat-u" onClick="LOGME.handler.toggleList()" id="p02_btnt"><span id="p02_lblt">On</span></a>
    </header><!-- /header -->
    <div class="ui-content" role="main" id="p02_cont">
@@ -113,10 +117,10 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p03" data-title="LOG ME v0.8">
+  <div data-role="page" id="p03" data-title="LOG ME v0.9">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#" id="p03_btn2" data-icon="back" data-direction="reverse">Back</a>
-    <h1>LOG ME</h1>
+    <h1>Edit<!--LOG ME--></h1>
    </header><!-- /header -->
 
    <div class="ui-content" role="main" id="p03_cont">
@@ -202,10 +206,10 @@ $(document).bind("mobileinit", function(){
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p04" data-title="LOG ME v0.8">
+  <div data-role="page" id="p04" data-title="LOG ME v0.9">
    <header data-role="header" data-position="fixed" data-id="header01">
     <a href="#p05" data-icon="info" data-transition="slideup">About</a>
-    <h1>LOG ME</h1>
+    <h1>Setting<!--LOG ME--></h1>
     <a href="#" data-icon="forward" id="p04_btnb" >Back</a>
    </header><!-- /header -->
 
@@ -288,6 +292,22 @@ Billiards</textarea>
 </fieldset>
 </div>
 
+<div class="ui-field-contain">
+<fieldset data-role="controlgroup">
+<legend>Password applies to:</legend>
+<input type="checkbox" name="p04_chb1" id="p04_chb1" form="p04_frm1" data-mini="true" />
+<label for="p04_chb1">Decryption</label>
+<input type="checkbox" name="p04_chb2" id="p04_chb2" form="p04_frm1" data-mini="true" />
+<label for="p04_chb2">Encryption</label>
+</fieldset>
+</div>
+
+<div class="ui-field-contain">
+<label for="p04_pas1">Master Password:</label>
+<input type="password" name="p04_pas1" id="p04_pas1" placeholder="Password" value="" form="p04_frm1" data-mini="true" />
+<p>Password is not saved.</p>
+</div>
+
 </form>
 
    </div><!-- /content -->
@@ -296,7 +316,7 @@ Billiards</textarea>
    </footer><!-- /footer -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p05" data-title="LOG ME v0.8">
+  <div data-role="page" id="p05" data-title="LOG ME v0.9">
    <header data-role="header" data-position="fixed" >
     <h2>About</h2>
     <a href="#" data-rel="back" data-role="button" data-icon="forward" class="ui-btn-right">Back</a>
@@ -305,7 +325,7 @@ Billiards</textarea>
 
 <h1 class="about">LOG ME</h1>
 <div class="about">
-<h2>Version <span id="p05_lblv" >0.88</span></h2>
+<h2>Version <span id="p05_lblv" >0.96</span></h2>
 <p>
 Copyright 2013-2014 SUMO_NINJA_JP
 <br>
@@ -327,11 +347,16 @@ jQuery Mobile 1.4.2
 <br>
 <a href="http://jquerymobile.com" target="_blank">http://jquerymobile.com</a>
 </p>
+<p>
+CryptoJS 3.1.2
+<br>
+<a href="https://code.google.com/p/crypto-js/" target="_blank">https://code.google.com/p/crypto-js/</a>
+</p>
 </div>
    </div><!-- /content -->
   </div><!-- /page -->
 
-  <div data-role="page" id="p06" data-title="LOG ME v0.8" data-dialog="true" data-close-btn="none" data-overlay-theme="b" >
+  <div data-role="page" id="p06" data-title="LOG ME v0.9" data-dialog="true" data-close-btn="none" data-overlay-theme="b" >
    <div data-role="header" >
     <h2>Save Changes</h2>
    </div>
