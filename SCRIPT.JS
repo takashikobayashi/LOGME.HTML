@@ -14,7 +14,7 @@ var settings;
 var getPassword;
 var isDecrypting, isEncrypting;
 
-var appVer = "0.96";
+var appVer = "0.97";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
@@ -188,6 +188,7 @@ function initApp() {
     else {
       $.mobile.changePage( "#p01", { transition: "slide" } );
     }
+    showCryptionMode();
   } );
 
   $( "#p04_frm1" ).submit( cancelSubmit );
@@ -223,6 +224,7 @@ function cancelSubmit( e ) {
   return false;
 }
 
+
 // #p01 functions
 
 function initMainUI() {
@@ -242,14 +244,7 @@ function initMainUI() {
 9: #p04_chb2
 */
 
-    if( $( idKey[8] ).prop( "checked" ) || $( idKey[9] ).prop( "checked" ) ) {
-      $( "#p01_btnl" ).toggleClass( "ui-icon-bars", false );
-      $( "#p01_btnl" ).toggleClass( "ui-icon-lock", true );
-    }
-    else {
-      $( "#p01_btnl" ).toggleClass( "ui-icon-bars", true );
-      $( "#p01_btnl" ).toggleClass( "ui-icon-lock", false );
-    }
+    showCryptionMode();
 
     for( i = 0; i < elms.length; i++ ) {
       result += "<input type=\"button\" name=\"p01_btn" + i + "\" value=\"" + removeTag( elms[i] ) + "\" id=\"p01_btn" + i + "\" data-corners=\"false\" form=\"p01_frm1\"/>";
@@ -392,6 +387,17 @@ function updateSubMenu() {
 
   initSelectUI( idKey[5], "#p01_sel1", suba );
   initSelectUI( idKey[5], "#p03_sel2", suba );
+}
+
+function showCryptionMode() {
+  if( $( idKey[8] ).prop( "checked" ) || $( idKey[9] ).prop( "checked" ) ) {
+    $( "#p01_btnl" ).toggleClass( "ui-icon-bars", false );
+    $( "#p01_btnl" ).toggleClass( "ui-icon-lock", true );
+  }
+  else {
+    $( "#p01_btnl" ).toggleClass( "ui-icon-bars", true );
+    $( "#p01_btnl" ).toggleClass( "ui-icon-lock", false );
+  }
 }
 
 function recordClicked( t, val ) {
@@ -588,7 +594,7 @@ function deleteAllClicked() {
     initMenus();
   }
 
-  $("#p02_btns .ui-btn-active").toggleClass("ui-btn-active");
+  $( "#p02_btns .ui-btn-active" ).toggleClass( "ui-btn-active", false );
 }
 
 function deleteAllRecords() {
@@ -625,6 +631,7 @@ function decryptRecord( t, v ){
       e.stopPropagation();
       e.preventDefault();
       $.mobile.changePage( "#p02" );
+
       return false;
     } );
   }
@@ -641,6 +648,9 @@ function decryptRecord( t, v ){
       isDecrypting = getIsDecryptingFromUI;
     } );
   }
+
+  $( "#p02_list .ui-btn-active" ).toggleClass( "ui-btn-active", false );
+
 //alert("decryptRecord: end");
 }
 
@@ -1078,8 +1088,8 @@ function restoreCheckSetting( id ) {
   return function() {
     sKey.id = id;
     val = storage.getItem( JSON.stringify( sKey ) );
-    val=(val==="false")?false:true;
     if( val != null ) {
+      val=(val==="false")?false:true;
       $( id ).prop( "checked", val );
       $( "#p04" ).one( "pagebeforeshow", function( e ){
         $( id ).checkboxradio( "refresh" );
