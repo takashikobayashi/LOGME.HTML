@@ -14,10 +14,17 @@ var settings;
 var getPassword;
 var isDecrypting, isEncrypting;
 
-var appVer = "0.97";
+var appVer = "0.98";
 var hashOp = { "outputLength":256 };
 var idSgn = "lgme";
 var idVer = [ "00", "01" ];
+
+//Globalize.format( d, fmt );
+var fmtISODate = "yyyy-MM-ddTHH:mm";
+var fmtFullDate = "yyyy/MM/dd HH:mm:ss fff";
+var fmtDateTime = "yyyy/MM/dd HH:mm:ss";
+var fmtDispTime = "HH:mm:ss";
+var fmtDispDate = "yyyy/MM/dd";
 
 var vKey = { "sign":idSgn, "version":idVer[0], "time":"", "isDel":false };
 
@@ -133,6 +140,8 @@ function initNameSpace() {
 
 function initApp() {
 //alert("initApp: begin");
+
+  Globalize.culture( "en" );
 
   getPassword = getMasterPassword;
   isDecrypting = getIsDecryptingFromUI;
@@ -515,6 +524,7 @@ function updateList() {
   var divider = "";
   var fltrTxt, funcName, dispStr;
   var keys, key, k;
+  var dstr;
   var obj;
   var d = new Date();
   var mode = getModeValueFromUI();
@@ -546,23 +556,26 @@ function updateList() {
     }
 
     d.setTime( key.time );
-    if( divider != getDisplayDateString( d ) ) {
-      divider = getDisplayDateString( d );
+    dstr = Globalize.format( d, fmtDispDate );
+    if( divider !== dstr ) {
+      divider = dstr;
       ret += "<li data-role=\"list-divider\">" + divider + "</li>";
     }
 
     k = JSON.stringify( key );
     obj = JSON.parse( extract( k ) );
 
+    dstr = Globalize.format( d, fmtDispTime );
+
     if( obj == null ) {
-      fltrTxt = divider + " " + getDisplayTimeString( d );
+      fltrTxt = divider + " " + dstr;
       funcName = "decryptRecord";
-      dispStr = getDisplayTimeString( d ) + "<span class='ui-li-count'>?</span>";
+      dispStr = dstr + "<span class='ui-li-count'>?</span>";
     }
     else {
-      fltrTxt = divider + " " + getDisplayTimeString( d ) +  " " + obj.val + " " + obj.sub;
+      fltrTxt = divider + " " + dstr +  " " + obj.val + " " + obj.sub;
       funcName = "editRecord";
-      dispStr = getDisplayTimeString( d ) + " " + obj.val;
+      dispStr = dstr + " " + obj.val;
     }
     ret += "<li data-filtertext='" + fltrTxt + "'><a href='#p03' onClick=\"LOGME.handler." + funcName + "(" + key.time + ",'" + key.version + "')\">" + dispStr;
 
@@ -687,8 +700,8 @@ function loadRecord( k ) {
   var d = new Date();
   d.setTime( key.time );
 
-  $( "#p03_lbl1" ).text( " [" + getDisplayFullString( d ) + "]" );
-  $( "#p03_txt1" ).val( getISODateString( d ) );
+  $( "#p03_lbl1" ).text( " [" + Globalize.format( d, fmtFullDate ) + "]" );
+  $( "#p03_txt1" ).val( Globalize.format( d, fmtISODate ) );
 
   obj = JSON.parse( extract( k ) );
 
@@ -778,6 +791,7 @@ function loadRecord( k ) {
 
   $( "#p03_btn2" ).unbind( "click" );
   $( "#p03_btn2" ).click( function( e ){
+
     if( isSameISODate( d, getDateFromUI() ) && isSameRecord( obj, getRecord() ) ) {
       $.mobile.changePage( "#p02", { transition: "slide", reverse: true } );
     }
@@ -869,7 +883,7 @@ function deleteClicked( k ) {
   var key = JSON.parse( k );
   var d = new Date();
   d.setTime( key.time );
-  var msg = "Are you sure, you would like to delete this record on " + getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " ?";
+  var msg = "Are you sure, you would like to delete this record on " + Globalize.format( d, fmtDateTime ) + " ?";
 
   if( confirm( msg ) ) {
     deleteRecord( k );
@@ -1437,31 +1451,7 @@ function getGoogleMapImgTag( lat, lng, zoom ){
 }
 
 function isSameISODate( d1, d2 ){
-  return getISODateString( d1 ) == getISODateString( d2 );
-}
-
-function getDisplayFullString( d ) {
-  return getDisplayDateString( d ) + " " + getDisplayTimeString( d ) + " " + getMilisecondString( d );
-}
-
-function getDisplayDateString( d ) {
-  return d.getFullYear() + "/" + pad( d.getMonth()+1 ) + "/" + pad( d.getDate() );
-}
-
-function getDisplayTimeString( d ) {
-  return pad( d.getHours() ) + ":" + pad( d.getMinutes() ) + ":" + pad( d.getSeconds() );
-}
-
-function getISODateString( d ) {
-  return d.getFullYear() + "-" + pad( d.getMonth()+1 ) + "-" + pad( d.getDate() ) + "T" + pad( d.getHours() ) + ":" + pad( d.getMinutes() );
-}
-
-function pad( num ) {
-  return num < 10 ? "0" + num : num;
-}
-
-function getMilisecondString( d ){
-  return String( (d.getMilliseconds()/1000).toFixed(3) ).slice( 2, 5 );
+  return Globalize.format( d1, fmtISODate ) === Globalize.format( d2, fmtISODate );
 }
 
 function c( o ){
